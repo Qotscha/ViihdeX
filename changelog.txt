@@ -1,0 +1,67 @@
+v 1.5.1X1.5.q5.2 (18.5.2021)
+- Lisätty mahdollisuus ladata tekstitykset erillisiin srt-tiedostoihin
+- Muutettu latausikkunaa informatiivisemmaksi
+
+v 1.5.1X1.5.q5.1 (16.5.2021)
+- Lisätty .bat-tiedosto ViihdeX-dl.py-skriptin käyttöön tarvittavien kirjastojen asentamiseksi
+- Muutettu Python-skriptin käynnistystä (yritetään ensin Python launcherilla)
+
+v 1.5.1X1.5.q5 (7.5.2021)
+- Siirrytty uuteen tapaan hakea tallenteen URL
+- Lisätty pakettiin ViihdeX-dl, jota tarvitaan tallenteiden lataamiseksi haluatuilla ääni- ja tekstitysraidoilla
+
+v.1.5.1X1.5.q4.1 (19.2.2021)
+- Poistettu viihdeX_q_ts.hta paketista, koska tallenteita ei ole enää mahdollista katsella tai ladata TS-muodossa
+- Korjattu tallenteen toistoa tai latausta aloitettaessa kohdassa Tila näkymään, mitä ohjelmaa todella käytetään (aiemmin aina "Valmistellaan MPC-HC:tä, odota")
+- Päivitetty tiedostossa LUEMINUT_hls.txt näkyvät URLit toimiviksi (veivät aiemmin vanhalle Elisa Palstalle)
+
+v.1.5.1X1.5.q4 HLS (7.2.2021)
+- Muutettu tiedotojen nimiä (viihdeX_q.hta, LUEMINUT.txt -> viihdeX_q_hls.hta, LUEMINUT_hls.txt)
+- Siirrytty käyttämäänn HTTP Live Streaming (HLS) -protokollaa tallenteiden latauksessa ja katselussa
+
+v.1.5.1X1.5.q4 TS (7.2.2021)
+- Muutettu tiedotojen nimiä (viihdeX_q.hta, LUEMINUT.txt -> viihdeX_q_ts.hta, LUEMINUT_ts.txt)
+- Ajantasaistettu LUEMINUT
+- Hieman siistitty koodia
+
+v1.5.1X1.5.q3 alpha 2 (9.10.2018)
+- Korjattu tallenteiden toimivuus
+- Lisätty valinnat curlin käyttämiselle lataukseen ja MPC-BE:n käyttämiselle toistoon
+
+v1.5.1X1.5.q3 alpha (03.07.2018)
+- Siirrytty käyttämään uutta APIa
+- Tallenteiden hallinta toimii roskakorista poistamista lukuun ottamatta
+- Ohjelmaopas ei toimi
+
+v1.5.1X1.5.q2.1 (18.11.2016)
+- Siirrytty käyttämään APIa suojatulla yhteydellä (https)
+
+v1.5.1X1.5.q2.0 (01.11.2016)
+- Lisätty zip-pakettiin kaikki tarvittavat tiedostot
+- Päivitetty README.txt LUEMINUT.txt:ksi
+- Lisätty mahdollisuus siirtää valintaruudut vasemmalle
+- Lisätty mahdollisuus käyttää VLC:tä tallenteiden lataukseen
+- Palautettu v1.5.1X1.5:n VLC-asetukset seuraavin muutoksin/korjauksin
+  - Lisätty VLC:lle valittavia lomituksenpoistotiloja
+  - Korjattu VLC:n lomituksenpoiston asetus (aiemmin tuoreilla VLC:n versioilla muutti vain lomituksenpoistotilaa, ei asettanut lomituksenpoistoa päälle)
+  - Muutettu tapaa, jolla VLC lataa tallenteet (dumppaus remuksauksen sijaan)
+  - Asetettu korvaamaan ladattavan tallenteen tiedostonimestä sopimattomat merkit \/:*?"<>| _:lla (VLC osaa tehdä tämän automaattisesti remuksatessaan, muttei dumpatessaan)
+  - Asetettu VLC sammumaan tiedoston lataamisen loppuessa
+- Korjattu ohjelmakartan toimintaa (tallennuspyynnöt toimivat ja tulevat tallenteet näkyvät kartassa, mutta toiminta on hieman kömpelöä)
+
+v1.5.1X1.5.q1.3 (30.10.2016)
+- Lisätty mahdollisuus käyttää VLC:tä tallenteiden toistoon (ja päivitetty README.txt ajan tasalle)
+
+v1.5.1X1.5.q1.2 (21.09.2016)
+- Korjattu: tallenteiden järjestäminen "Tila"-sarakkeen mukaan ei säilynyt asetuksissa
+
+v1.5.1X1.5.q1.1 (23.03.2016)
+- Korjattu tallenteiden lähetysajan mukaan järjestäminen muokkaamalla sortableTable.js-tiedostoa
+- Lisätty versionumerointi ja README.txt
+
+v1.5.1X1.5.q (14.03.2016) verrattuna Elisa ViihdeX Media Manager v1.5.1X1.5:een
+- Tallenteiden toistoon käytetään MPC-HC:ta ja lataukseen Wgetiä
+- Hakutuloksiin lisätty toisto- ja latauspainikkeet
+- Lisätty mahdollisuus tallentaa ladattavan ohjelman kuvaus tekstitiedostoon
+- Asetukset tallennetaan eri tiedostoon (mahdollistaa rinnakkaisen käytön alkuperäisen ViihdeX Media Managerin kanssa)
+- Korjattu jossakin määrin (ei täydellisesti) ääkkösten näkymistä kansioiden nimissä

@@ -1,0 +1,91 @@
+Yleistä:
+- Jatkokehitelmä Elisa Viihde Media Manageriin (tekijä groner, ks. LUEMINUT (alkuperäinen).txt,
+  https://yhteiso.elisa.fi/elisa-viihde-sovellus-ja-nettipalvelu-16/viihde-media-manager-tallenteiden-hallinta-windowsille-12-05-2011-v1-5-1-15550)
+  pohjautuvasta Elisa ViihdeX Media Manager v1.5.1X1.5:stä (kehittäjät jila ja puje,
+  https://yhteiso.elisa.fi/elisa-viihde-sovellus-ja-nettipalvelu-16/viihdex-media-manager-tallenteiden-hallinta-windowsille-188707).
+- Sovelluksen viihdeX_q.hta avulla voi katsoa ja ladata Elisa Viihteen tallenteita.
+- Pakettiin sisältyy lataukseen tarvittava ViihdeX-dl (python-skripti ja stand-alone exe).
+- Ohjelmaopas ei toimi.
+
+KOODISSA NÄKYVÄN API-KEYN KÄYTTÖ MUISSA YHTEYKSISSÄ ON EHDOTTOMASTI KIELLETTY!
+
+- API-keytä muuttamatta sovellusta viihdeX_q.hta
+  - saa käyttää vapaasti ei-kaupalliseen käyttöön.
+  - saa muunnella vähäisessä määrin omaan käyttöön (esim. muuttaa ladattavan tallenteen tiedostonimen rakennetta), kunhan suoritettavia http-kutsuja ei muutella tai lisätä.
+  - EI SAA jakaa muualla (linkittäminen on siis sallittua).
+- API-keyn VAIHTAMALLA sovellusta saa muokata ja jakaa vapaasti, kunhan Suomen lakia ja Elisan ja kehittäjän välistä GDPR-sopimusta noudatetaan.
+
+  - Elisa Oyj:n virallisen logon sekä Elisa Palstan favicon-kuvakkeen oikeudet ovat Elisalla.
+
+  - ViihdeX-dl on julkaistu MIT-lisenssillä.
+    - ViihdeX-dl.exe sisältää kolmansien osapuolten Python-kirjastoja, joiden lisenssitiedot löytyvät tiedostosta third-party.txt.
+
+  - Kolmansien osapuolten skriptien lisenssit ovat alla:
+
+    Script          : Core.js / Mootools - My Object Oriented javascript.
+    License         : MIT-style license.
+    MooTools Copyright  : copyright (c) 2007 Valerio Proietti, <http://mad4milk.net>
+    MooTools Credits    :
+    - Class is slightly based on Base.js <http://dean.edwards.name/weblog/2006/03/base/> (c) 2006 Dean Edwards, License     <http://creativecommons.org/licenses/LGPL/2.1/>
+    - Some functions are inspired by those found in prototype.js <http://prototype.conio.net/> (c) 2005 Sam Stephenson sam [at] conio [dot] net,    MIT-style license
+    - Documentation by Aaron Newton (aaron.newton [at] cnet [dot] com) and Valerio Proietti.
+
+    Script          : Sortable Table
+    Version         : 1.4
+    Authors         : Samuel Birch
+    Desc            : Sorts and filters table elements
+    Licence         : Open Source MIT Licence
+
+    Script          : UTF-8 data encode / decode
+    Authors / Copyright : http://www.webtoolkit.info/
+
+Asennus:
+- Pura tiedostot.
+- Saatat joutua erikseen sallimaan viihdex_q.hta:n sekä kansiossa js olevien .js-tiedostojen suorittamisen (ks.
+  https://yhteiso.elisa.fi/elisa-viihde-sovellus-ja-nettipalvelu-16/viihde-helper-ei-lataa-ohjelmaa-tietokoneelle-513590?postid=598345#post598345,
+  https://yhteiso.elisa.fi/elisa-viihde-sovellus-ja-nettipalvelu-16/viihdex-media-manager-tallenteiden-hallinta-windowsille-188707/index9.html#post437512).
+
+Tarvittavat ohjelmat tallenteiden katseluun
+- VLC (http://www.videolan.org/vlc/, aseta tarvittaessa oikea polku tiedostossa js\vlc-portable.js ja muuta tiedoston nimeksi vlc.js) TAI
+- MPC-HC (huom. TEKSTITYKSET EIVÄT TOIMI, https://github.com/clsid2/mpc-hc/releases, muuta tarvittaessa MPC-HC:n polku run_mpc-hc.vbs-tiedostossa)
+
+Tarvittavat ohjelmat tallenteiden lataukseen
+- ViihdeX-dl (pakettiin sisältyy Python-skripti ja sen stand-alone exe) JA
+  - Jotkut virustorjuntaohjelmistot voivat pitää tiedostoa ViihdeX-dl.exe haitallisena ja poistaa tai estää sen.
+  - Vaihtoehtoisesti voi käyttää Python-skriptiä ViihdeX-dl.py edellyttäen että tietokoneelle on asennettu Python 3 (https://www.python.org/downloads/windows/)
+    sekä kirjastot requests ja pycountry, jotka voi asentaa tiedostoa asenna python-kirjastot.bat käyttäen, jos Python-asennukseen sisältyy pip.
+  - Asetukset määritellään tiedostossa dlsettings.ini:
+    - kielivalinnoissa käytetään ISO 639-1- tai ISO 639-2-koodeja (https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+    - audio languages:      ladattavat ääniraidat (jättämällä tyhjäksi ladataan kaikki), oletuksena suomi ja hollanti (äänitekstitys)
+    - subtitle languages:   ladattavat tekstitykset (jättämällä tyhjäksi ladataan kaikki), oletuksena suomi ja hollanti (ohjelmatekstitys)
+    - default audio:        ääniraita, joka merkitään tiedoston metadataan oletusääniraidaksi, oletuksena suomi
+    - default subtitle:     tekstitys, joka merkitään tiedoston metadataan oletustekstitykeksi, oletuksena suomi
+    - visual impaired:      ääniraita, joka merkitään tiedoston metadataan äänitekstityksen sisältäväksi ääniraidaksi, oletuksena hollanti
+    - hearing impaired:     tekstitys, joka merkitään tiedoston metadataan ohjalematekstityksen sisältäväksi tekstitykseksi, oletuksena hollanti
+    - maximum bandwidth:    tallenne ladataan parhaalla laadulla, jonka bittivirran nopeus (b/s) on alle tässä asetetun, oletuksena 0 (laatua ei rajoiteta)
+    - file extension:       tallenteen tiedostomuoto, tuettuna joko mkv (oletus) tai mp4
+    - ffmpeg options:       FFmpeg:n globaalit ja input-parametrit
+    - ffmpeg video codec:   FFmpeg:n videokoodekkiparametrit, oletuksena videota ei transkoodata
+    - ffmpeg audio codec:   FFmpeg:n audiokoodekkiparametrit, oletuksena audiota ei transkoodata
+- FFmpeg (https://ffmpeg.org/download.html#build-windows)
+  - Sijoita ffmpeg.exe samaan kansioon tai huolehdi siitä, että ffmpeg.exen sisältävä kansio on lisätty PATH-ympäristömuuttujaan.
+
+Tärkeimmät muutokset Elisa ViihdeX Media Manager v1.5.1X1.5:een verrattuna:
+- Tallenteiden lataukseen ja toistoon käytetään HTTP Live Streaming (HLS) ja Dynamic Adaptive Streaming over HTTP (DASH) -protokollia.
+- Tallenteiden lataukseen käytetään FFmpeg:tä.
+- Hakutuloksiin lisätty toisto- ja latauspainikkeet.
+- Lisätty mahdollisuus tallentaa ladattavan ohjelman kuvaus tekstitiedostoon.
+- Täydellinen lista muutoksista tiedostossa changelog.txt.
+
+Tallenteen katselun jatkaminen viimeksi jäädystä kohdasta:
+- Edellyttää, että MPC-HC on asetettu
+   1) tallentamaan asetuksensa rekisteriin (Asetukset > Soitin / Muu / Tallenna asetukset .ini-tiedostoon EI valittuna) JA
+   2) muistamaan, mihin viimeksi toistetuissa tiedostoissa on jääty (Asetukset > Soitin / Historia / Muista tiedoston sijainti) JA
+   3) youtube-dl ei ole käytössä (Asetukset > Kehittynyt > UseYDL: Epätosi).
+- Toiminta perustuu run_mpc-hc.vbs:n tekemään rekisterimuokkaukseen
+   1) Kunkin tallenteen URL koostuu osin pysyvistä, osin joka toistokerta muuttuvista osista.
+   2) Rekisteristä etsitään pysyvän osan perusteella, onko tallenne MPC-HC:n viimeksi käytettyjen tiedostojen joukossa.
+   3) Jos on, rekisteriin tallennettu URL muutetaan ennen toiston aloittamista kyseistä toistokertaa vastaavaksi.
+- Ei toimi, jos
+   1) jokainen tiedosto avataan samassa MPC-HC:n ikkunassa (Asetukset > Soitin / Avaa asetukset / Käytä samaa soitinta jokaiselle mediatoistolle) JA
+   2) MPC-HC on käynnissä, kun tallenteen toisto aloitetaan.

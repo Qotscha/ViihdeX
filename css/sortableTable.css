@@ -1,0 +1,134 @@
+
+
+/**************************************************************
+
+	Sortable Table
+	v 1.4
+
+**************************************************************/
+
+table {
+	width: 100%;
+}
+
+.margin-left {
+	padding-left: 20px;
+}
+
+.margin-right {
+	padding-right: 20px;
+}
+
+th {
+	background: #eee url(../images/icon-table-sort.png) no-repeat 10px 8px;
+	padding: 4px 4px 4px 22px;
+	line-height: 18px;
+	color: #404040;
+	text-align: left;
+}
+
+th.disable-sorting {
+	background: #eee;
+	padding-left: 10px;
+	width: 15px;
+	cursor: normal;
+	text-decoration: none;
+}
+
+th.no-sorting {
+	background: #eee;
+	padding-left: 10px;
+	cursor: normal;
+	text-decoration: none;
+}
+
+tr {
+	background-color: #FAFAFA;
+	padding: 4px;
+}
+
+tr.altRow {
+	background-color: #fff;
+}
+
+td {
+	padding: 0 10px;
+	line-height: 18px;
+	vertical-align: top;
+	color: #7C7C7C;
+}
+
+td.folder {
+	background-image: url(../images/folder.gif);
+	background-repeat: no-repeat;
+	background-position: 8px 0px;
+	padding-left: 26px;
+}
+
+td.folderUp {
+	background-image: url(../images/icon-folder-up.png);
+	background-repeat: no-repeat;
+	background-position: 8px 0px;
+	padding-left: 26px;
+}
+
+td.folderTrash {
+	background-image: url(../images/icon-trash-bin.jpg);
+	background-repeat: no-repeat;
+	background-position: 8px 0px;
+	padding-left: 26px;
+}
+
+.rightAlign {
+	text-align: right;
+}
+
+
+.sortedASC {
+	background: url(../images/icon-table-sort-asc.png) no-repeat 10px 4px #eee;
+}
+
+.sortedDESC {
+	background: url(../images/icon-table-sort-desc.png) no-repeat 10px 10px #eee;
+}
+
+.tableHeaderOver {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+tr.selected-row {
+	background-color: #E5FAC8;
+}
+
+tr:hover, tr.over, tr.active-row {
+	background-color: #7DC714;
+	color: #fff;
+}
+
+tr:hover td, tr.active-row td {
+	color: #fff;
+}
+
+tr:hover span.link, tr.over span.link, #modal-box-body span.link, tr.active-row span.link {
+	color: #fff;
+	text-decoration: none;
+}
+
+tr:hover span.link:hover, tr.over span.link:hover, #modal-box-body span.link:hover, tr.active-row span.link:hover {
+	text-decoration: underline;
+}
+
+.hide {
+	display: none;
+}
+
+.myTableTop tr:hover, .myTableTop tr:hover td {
+	background-color: #FAFAFA;
+	color: #7C7C7C;
+}
+
+.myTableTop tr.altRow:hover, .myTableTop tr.altRow:hover td {
+	background-color: #fff;
+	color: #7C7C7C;
+}

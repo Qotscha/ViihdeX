@@ -1,0 +1,39 @@
+Sovelluksen tekijä		: groner
+Keskusteluketju Elisa Palstalla	: http://palsta.elisa.fi/index.php/topic,1687.0.html
+Projektin kotisivu		: http://groner.wippiespace.com/viihde-mm/ (asennusohjeet, muutoshistoria ym. lisätietoa)
+
+
+1) Vastuunrajoitukset:
+
+Elisa Viihde Media Manager ei ole Elisan tarjoama tai tukema sovellus. Kyseessä on harrastusprojekti, josta on toivottavasti iloa ja apua Elisa Viihde -palvelun käyttäjille tallenteiden hallinnoimisessa. Sovellus on testattu ja todettu täysin toimivaksi, mutta virhetilanteita saattaa siitä huolimatta syntyä. Sovellus tarjotaan sellaisenaan ilman minkäänlaista takuuta ja sovelluksen käyttö on täysin omalla vastuullasi.
+
+TÄMÄ SOVELLUS TARJOTAAN "SELLAISENAAN" JA "SELLAISENA KUIN SE ON SAATAVILLA". SOVELLUKSEN KÄYTETTÄVYYDEN, TARKKUUDEN, LUOTETTAVUUDEN TAI SISÄLLÖN SUHTEEN EI ANNETA MINKÄÄNLAISTA TAKUUTA. SOVELLUKSEN TEKIJÄ EI OLE VASTUUSSA MISTÄÄN SUORISTA, EPÄSUORISTA, SATUNNAISISTA TAI VÄLILLISISTÄ VAHINGOISTA, JOTKA JOHTUVAT TÄMÄN SOVELLUKSEN KÄYTTÄMISESTÄ.
+
+
+2) Lisenssit:
+
+Varsinaista Elisa Viihde Media Manager -sovellusta (myöhemmin pelkkä "sovellus") ei ole lisensoitu ja se on asetettu public domainiin, josta lisätietoa esim. Wikipediassa: http://fi.wikipedia.org/wiki/Public_domain
+
+Sovelluksessa käytetään Elisa Oyj:n virallista logoa sekä Elisa Palstan favicon-kuvaketta, joiden oikeudet ovat Elisalla.
+
+Sovelluksessa käytetään myös kolmansien osapuolien tekemiä skriptejä, joilla on omat lisenssinsä. Nämä skriptit ja lisenssit listattu alla skriptien omilla julkaisukielillä eli englanniksi.
+
+
+Script			: Core.js / Mootools - My Object Oriented javascript.
+License			: MIT-style license.
+MooTools Copyright	: copyright (c) 2007 Valerio Proietti, <http://mad4milk.net>
+MooTools Credits	:
+- Class is slightly based on Base.js <http://dean.edwards.name/weblog/2006/03/base/> (c) 2006 Dean Edwards, License <http://creativecommons.org/licenses/LGPL/2.1/>
+- Some functions are inspired by those found in prototype.js <http://prototype.conio.net/> (c) 2005 Sam Stephenson sam [at] conio [dot] net, MIT-style license
+- Documentation by Aaron Newton (aaron.newton [at] cnet [dot] com) and Valerio Proietti.
+
+
+Script			: Sortable Table
+Version			: 1.4
+Authors			: Samuel Birch
+Desc			: Sorts and filters table elements
+Licence			: Open Source MIT Licence
+
+
+Script			: UTF-8 data encode / decode
+Authors / Copyright	: http://www.webtoolkit.info/

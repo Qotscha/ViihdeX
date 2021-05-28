@@ -1,0 +1,86 @@
+2012.05.31
+- Asetus roskakorin sijainnille: kansioiden joukossa tai viimeisenä
+- Asetus roskakorin nimelle: {roskakori} tai eviihde.trash (tunnistaa käytetyn roskakorin eka käynnistyksellä)
+- "Uudempi alkuperäiseksi, niin se tulee alkuperäiseksi vain silloin, kun lähtöjärjestyksessä vanhin on ylimpänä." bugi korjattu
+
+2012.05.30
+- "duplicaattien hakujärjestys ei tallennu" bugi korjattu
+- Tyhjennä roskakori -nappi lisätty
+- Asetuksiin lisätty duplicaattien hakujärjestys
+- "Ladattujen tietojen luku epäonnistui (Tiedostoa ei löydy)" bugi korjattu
+
+2012.05.28
+- Hakemistopolku lisätty duplicaatti listan ja hakutulosten alkuun
+- "Dialogin peruutus-nappi jää harmaaksi jos hakukansio on tyhjä" bugi korjattu
+
+2012.05.23
+- Duplicaatti tulokset listaan
+- lisätty virheilmoituksia
+
+2012.05.20
+- Download ikoni muuttuu keltaiseksi kun lataus on kerran aloitettu
+
+2012.05.18
+- Järjestää lähetysajan mukaan vanhimmat ensiksi ennen duplicaatti vertailua
+- DUP näyttää molempien tallenteiden tiedot popupissa
+
+2012.05.15
+- Roskakorin nimeksi {roskakori} Menee aakkostuksessa viimeiseksi
+- Latauksen minimointi asetuksiin
+- Latausnapista lataus dialogi, jossa voi valita tallennuskansion
+- Ladatun tidoston nimeksi: nimi_vuosi_kk_pp_tunti_min_id.ts
+- Duplicaattihaku: trim ja toUpperCase nimelle ja kuvaukselle ennen vertailua
+
+2012.05.14 Muutokset
+- Tiedostojen lataus VLC:n kautta omalle koneella
+- Esisuodatus kuvauksille ja nimille ennen duplicaattien hakua
+- Duplicaateilla oltava sama nimi
+- Ikkunan sijainti asetuksiin
+- "duplicaattien haku tyhjästä kansiosta jumittaa ui:n" bugi korjattu
+- Roskakori aina viimeisenä riippumatta järjestyksestä
+- "ajan mukaan järjestäminen roskakorissa aiheuttaa virheilmoituksen" bugi korjattu
+- Sisäänkirjautumisessa focus käyttäjätunnukseen jos tyhjä
+
+2012.05.13 Muutokset:
+- Lisätty kuvauksien vertailuun perustuva duplicaattien haku
+- "undefined teksti tallenteiden yläpuolella" bugi korjattu
+
+2012.05.11 Muutokset:
+- Roskakori aakkosissa viimeiseksi
+- Ylimmän tason tiedostot voi myös merkitä lapsille
+- Katselukertojen järjestys menee oikein ( 1,2,3,4,5,6,7,8,9,10,11,...  )
+
+
+
+Uudet ominaisuudet:
+- Roskakori
+- Lapsitila (oletus pin-koodi on 0000)
+    * Päätason kansioita voi merkitä lapsikansioiksi
+    * Lapsitilan saa päälle ja pois
+    * Poistuttaessa lapsitilasta annettava pin-koodi        
+- VLC asetuksia
+
+Pikkku säätöjä:
+- Varoitusikoni kun tiedosto/kansio poistetaan lopullisesti
+- Katsomattomien tallenteiden tila mustalla
+- Paluu "kansioille" oma ikoni 
+- Dialogit sulkeutumaan Esc-näppäimellä tai ulkopuolelta painettaessa
+
+
+
+
+
+
+
+Lisätty:
+================================================
+
+tiedosto: images/icon-folder-up.png
+tiedosto: images/icon-important.jpg
+tiedosto: images/icon-trash-bin.jpg
+
+Muokattu:
+================================================
+
+tiedosto: js/mootools.js
+tiedosto: viihdeX.hta

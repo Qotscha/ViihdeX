@@ -1,0 +1,4226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+
+		<script type="text/javascript">
+			// ToDO: before window stuff here
+		</script>
+
+		<HTA:APPLICATION
+			innerBorder="yes"
+			caption="yes"
+			sysMenu="yes"
+			scroll="yes"
+			navigable="yes"
+			contextMenu="no"
+			icon="images/favicon.ico"
+			/>
+
+		<title>Elisa ViihdeX Media Manager v1.5.1X1.5.q5.2</title>
+		<link rel="stylesheet" type="text/css" href="css/styles.css">
+		<link rel="stylesheet" type="text/css" href="css/sortableTable.css">
+		<script type="text/javascript" src="js/mootools.js"></script>
+		<script type="text/javascript" src="js/sortableTable.js"></script>
+		<script type="text/javascript" src="js/utf8.js"></script>
+		<script type="text/javascript" src="js/vlc.js"></script>
+		<script type="text/javascript" src="js/encryption.js"></script>
+		<script type="text/javascript">
+
+// Settings
+var SETTINGS_child_pin_value;
+var SETTINGS_child_mode;
+var SETTINGS_child_folders = [];
+var SETTINGS_window_x;
+var SETTINGS_window_y;
+var SETTINGS_download_path;
+var SETTINGS_external_subtitles;
+var SETTINGS_VLC_subtitles_language;
+var SETTINGS_save_description;
+var SETTINGS_duplicate_pre_sorting;
+var SETTINGS_trash_bin_name;
+var SETTINGS_trash_bin_position;
+var SETTINGS_player;
+var SETTINGS_downloader;
+var SETTINGS_checkbox_left
+
+// Configuration
+var use_trash_bin = "yes" // "no"
+var default_pin_code = '0000';
+var duplicate_name_drop = [ '(16)', '(12)', '(7)', '(K15)', '(K13)', '(S)' ];
+var duplicate_desc_drop = [ 'Suora l‰hetys.', '(u)' ];
+
+
+// Consts
+var CONST_record_has_no_desc = "Ohjelmalla ei ole kuvausta"
+var child_on = 'Kyll‰'
+var child_off = 'Ei'
+var err_id_file_not_found = -2146828235;
+var err_id_input_past_end_of_file = -2146828226;
+var trash_bin_names = [ '{roskakori}', 'eviihde.trash' ];
+
+
+// Vars
+var trash_bin_folder_id = -1;
+var downloaded_record_ids;
+var record_infos = [];
+
+var loginDataFile="data/prv.txt"
+var sortingColumnFile="data/sorting.txt"
+var resolutionFile="data/resolution.txt"
+var guideViewFile="data/guide.txt"
+var settingsFile="data/settings.txt"
+var downloadedFile="data/downloaded.txt"
+var bearer=""
+var loggedIn=false
+var rememberLogin=false
+var myTable={}
+var folderidCurrent=""
+var foldernameCurrent=""
+var folderArray=new Array()
+var programIdArray=new Array()
+var programViewIdArray=new Array()
+var newTrace=""
+var folderTraceArray=new Array()
+var idTraceArray=new Array()
+var destination=""
+var allChannelsCurrentDay=""
+var downloadDesc=false
+var topProgramsRefresh=false
+var loadingReady=false
+var sortingColumn=0
+var sortBy="ASC"
+var guideView="all"
+var customResolution=false
+var width=1095
+var height=800
+var progDescArray=new Array
+var progNameArray=new Array
+if( document.addEventListener )
+	document.addEventListener('keyup', my_keyup, false);
+else if (document.attachEvent)
+	document.attachEvent('onkeyup', my_keyup);
+
+//------------------------------------------------------------------------------
+function error_msg( ignore_this_error_id, func_name, err )
+{
+	if( err.number != ignore_this_error_id )
+	{
+		alert('Virhe! '+err.message+' ('+err.number+') funktiossa '+func_name );
+	}
+}
+//------------------------------------------------------------------------------
+function my_keyup( event )
+{
+	if( event.keyCode == 27 ) dialog_close();
+}
+
+//------------------------------------------------------------------------------
+function dialog_close()
+{
+	$("modal-bg").setStyle("display","none");
+	$("modal-box").setStyle("display","none");
+	$$("tr.active-row").each( function (item, index){ $(item.id).removeClass("active-row"); } );
+	$("status").setHTML("OK");
+	$("modal-box").setStyle("top","50%");
+}
+//------------------------------------------------------------------------------
+function stripTags( html )
+{
+	var add = true;
+	var text = '';
+	for( i=0; i<html.length; i++ )
+	{
+		if( html.charAt(i) == '<' ) add = false;
+		else if( html.charAt(i) == '>' ) add = true;
+		else if( add ) text += html.charAt(i);
+	}
+	return text;
+}
+
+//------------------------------------------------------------------------------
+function start_time_to_text( start_time )
+{
+	var a = start_time.split(' ');
+	var da = a[0].split('-');
+	var ti = a[1].split(':');
+	var d=new Date()
+	var today = '';
+	if( d.getDate() < 10 ) today += '0';
+	today += d.getDate()+".";
+	if( d.getMonth() < 9 ) today += '0';
+	today += (d.getMonth()+1);
+	today += "."+d.getYear();
+	var weekday = getWeekday(da[0], da[1], da[2]);
+	var text = weekday+' '+da[2]+'.'+da[1]+'.'+da[0]+' '+ti[0]+':'+ti[1];
+	if( da[2]+'.'+da[1]+'.'+da[0] == today ) text += ' (t‰n‰‰n)';
+	return text;
+}
+
+//------------------------------------------------------------------------------
+function resizeWindow(b,a)
+{
+	var d=0
+	var c=0
+	if(b!=0&&a!=0)
+	{
+		d=(screen.width/2)-(b/2)
+		c=(screen.height/2)-(a/2)
+		if( SETTINGS_window_x > -1 ) d = SETTINGS_window_x;
+		if( SETTINGS_window_y > -1 ) c = SETTINGS_window_y;
+	}
+	if(b==0&&a==0)
+	{
+		b=screen.availWidth
+		a=screen.availHeight
+	}
+	window.moveTo(d,c)
+	window.resizeTo(b,a)
+}
+
+//------------------------------------------------------------------------------
+function decodingFilter(a)
+{
+	return utf8.decode(unescape(a))
+}
+
+//------------------------------------------------------------------------------
+function encodingFilter(a)
+{
+	return escape(utf8.encode(a))
+}
+
+var loadingTicks=0
+//------------------------------------------------------------------------------
+var showIndicator=function()
+{
+	var a=$("loading")
+	var b=new Array(".","..","...")
+	if(a&&!loadingReady)
+	{
+		a.innerHTML=b[loadingTicks]
+		if(loadingTicks==2)
+		{
+			loadingTicks=0
+		}
+		else
+		{
+			loadingTicks++
+		}
+		setTimeout(showIndicator,200)
+	}
+	if(loadingReady)
+	{
+		loadingReady=false
+		loadingTicks=0
+	}
+}
+//------------------------------------------------------------------------------
+var showLoadingLogin=function(){
+	$("status").setHTML('Kirjaudutaan sis‰‰n<span id="loading"></span>')
+	showIndicator()}
+var showLoading=function(){
+	$("data").setStyle("display","none")
+	$("status").setHTML('Ladataan tietoja, odota<span id="loading"></span>')
+	showIndicator()}
+var showLoadingDetails=function(){
+	$("status").setHTML('Ladataan tietoja, odota<span id="loading"></span>')
+	showIndicator()}
+var showLoadingFolderList=function(){
+	$("status").setHTML('Ladataan kansiolistaa, odota<span id="loading"></span>')
+	showIndicator()}
+var showLoadingMove=function(){
+	$("status").setHTML('Siirret‰‰n tallennetta<span id="loading"></span>')
+	showIndicator()}
+var showLoadingMassMove=function(){
+	$("status").setHTML('Siirret‰‰n tallenteita (<span id="current-item">0</span>/<span id="total-items"></span>)<span id="loading"></span>')
+	showIndicator()}
+var showLoadingDelete=function(){
+	$("status").setHTML('Poistetaan tallennetta<span id="loading"></span>')
+	showIndicator()}
+var showLoadingMassDelete=function(){
+	$("status").setHTML('Poistetaan tallenteita (<span id="current-item">0</span>/<span id="total-items"></span>)<span id="loading"></span>')
+	showIndicator()}
+var showLoadingMPC=function(download){
+	if (download)
+	{
+		if (SETTINGS_downloader == 'ffmpeg')
+			$("status").setHTML('Aloitetaan tallenteen lataus FFmpeg:ll‰<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'streamlink')
+			$("status").setHTML('Aloitetaan tallenteen lataus Streamlinkill‰<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'curl')
+			$("status").setHTML('Aloitetaan HLS master playlistin lataus‰<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'viihdex-dl_py')
+			$("status").setHTML('Aloitetaan tallenteen lataus Viihdex-dl:ll‰<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'viihdex-dl')
+			$("status").setHTML('Aloitetaan tallenteen lataus Viihdex-dl:ll‰<span id="loading"></span>')
+	}
+	else
+	{
+		if (SETTINGS_player == 'mpc-hc')
+			$("status").setHTML('Valmistellaan MPC-HC:t‰, odota<span id="loading"></span>')
+		else if (SETTINGS_player == 'vlc')
+			$("status").setHTML('Valmistellaan VLC:t‰, odota<span id="loading"></span>')
+	}
+	showIndicator()}
+var showLoadingNewFolder=function(){
+	$("status").setHTML('Uusi kansio lis‰tty, p‰ivitet‰‰n kansiolistaa<span id="loading"></span>')
+	showIndicator()}
+var showLoadingDeleteFolder=function(){
+	$("status").setHTML('Poistetaan kansiota<span id="loading"></span>')
+	showIndicator()}
+var showLoadingEditFolder=function(){
+	$("status").setHTML('Muutokset tallennettu, p‰ivitet‰‰n kansiolistaa<span id="loading"></span>')
+	showIndicator()}
+var showLoadingGuide=function(){
+	$("data").setStyle("display","none")
+	$("status").setHTML('Ladataan tietoja, odota<span id="loading"></span>')
+	showIndicator()}
+var showRefreshGuide=function(){
+	$("status").setHTML('Ohjelma merkitty aina tallentuvaksi, p‰ivitet‰‰n ohjelmakarttaa<span id="loading"></span>')
+	showIndicator()}
+var showRefreshGuideDelete=function(){
+	$("status").setHTML('Ohjelma poistettu aina tallentuvista, p‰ivitet‰‰n ohjelmakarttaa<span id="loading"></span>')
+	showIndicator()}
+var showLoadingAddRecord=function(){
+	$("status").setHTML('Lis‰t‰‰n tallennuspyyntˆ‰<span id="loading"></span>')
+	showIndicator()}
+var showLoadingDeleteRecord=function(){
+	$("status").setHTML('Poistetaan tallennuspyyntˆ‰<span id="loading"></span>')
+	showIndicator()}
+var showLoadingDeleteWildcard=function(){
+	$("status").setHTML('Poistetaan aina tallentuvaa<span id="loading"></span>')
+	showIndicator()}
+var showLoadingDescEPG=function(){
+	$("program-desc").setHTML('Ladataan kuvausta<span id="loading"></span>')
+	showIndicator()}
+var showLoadingSettings=function(){
+	$("status").setHTML('Ladataan asetuksia, odota<span id="loading"></span>')
+	showIndicator()}
+//------------------------------------------------------------------------------
+var showFreeText=function(txt){
+	$("status").setHTML(txt)}
+var stopLoading=function(){
+	loadingReady=true}
+function hash(){
+	return new Date().getTime()}
+var timeLeft=900
+//------------------------------------------------------------------------------
+var sessionKeepAlive=function(){
+	timeLeft=timeLeft-1
+	if(timeLeft==0){
+		var a=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/channels.sl?ajax=true&"+hash()).send()
+		timeLeft=900
+		setTimeout("sessionKeepAlive()",1000)
+		return false}
+	setTimeout("sessionKeepAlive()",1000)}
+//------------------------------------------------------------------------------
+function getWeekday(c,f,b){
+	var a=["Su","Ma","Ti","Ke","To","Pe","La"]
+	f--
+	var g=new Date(c,f,b)
+	var d=g.getDay()
+	return a[d]}
+//------------------------------------------------------------------------------
+function getToday(){
+	var b=new Date()
+	var a=b.getDate()
+	var d=b.getMonth()+1
+	var c=b.getYear()
+	return a+"."+d+"."+c}
+//------------------------------------------------------------------------------
+Array.prototype.removeDuplicates=function(){
+	var c=new Array()
+	o:for(var b=0,f=this.length;b<f;b++){
+		for(var a=0,d=c.length;a<d;a++){
+			if(c[a]==this[b]){
+				continue o}}
+		c[c.length]=this[b]}
+	return c}
+//------------------------------------------------------------------------------
+function capitalize(a){
+	return a.charAt(0).toUpperCase()+a.slice(1)}
+//------------------------------------------------------------------------------
+function checkSortingColumn()
+{
+	try
+	{
+		var b=new ActiveXObject("Scripting.FileSystemObject")
+		var a=b.OpenTextFile(sortingColumnFile,1,false)
+		sortingColumn=a.readline()
+		a.close()
+		if(sortingColumn!=0&&sortingColumn!=1&&sortingColumn!=2&&sortingColumn!=3&&sortingColumn!=4&&sortingColumn!=5)
+		{
+			sortingColumn=0
+		}
+	}
+	catch(err)
+	{
+		error_msg( err_id_file_not_found, 'checkSortingColumn', err );
+	}
+	return sortingColumn
+}
+//------------------------------------------------------------------------------
+function checkSortingOrder()
+{
+	try
+	{
+		var c=new ActiveXObject("Scripting.FileSystemObject")
+		var a=c.OpenTextFile(sortingColumnFile,1,false)
+		var b=a.readline()
+		sortBy=a.readline()
+		a.close()
+		if(sortBy!="ASC"&&sortBy!="DESC")
+		{
+			sortBy="ASC"
+		}
+	}
+	catch(err)
+	{
+		error_msg( err_id_file_not_found, 'checkSortingOrder', err );
+	}
+	return sortBy
+}
+//------------------------------------------------------------------------------
+function openURL(a){
+	w=new ActiveXObject("WScript.Shell")
+	w.run(a)}
+//------------------------------------------------------------------------------
+function parseNode(b,c){
+	var a=(c==null)?xmlDoc.getElementsByTagName(b):items[c].getElementsByTagName(b)
+	if(a.length>0){
+		return a[0].firstChild.nodeValue}}
+//------------------------------------------------------------------------------
+function isNumber(b){
+	var a=(b.which)?b.which:event.keyCode
+	if(a>31&&(a<48||a>57)){
+		return false}
+	return true}
+//------------------------------------------------------------------------------
+function leaveOnlyNumbers( text )
+{
+	var v='';
+	for( i=0; i<text.length; i++ )
+	{
+		if( 48 <= text.charCodeAt(i) && text.charCodeAt(i) <= 57 )
+			v += text.charAt(i);
+	}
+	return v;
+}
+//------------------------------------------------------------------------------
+function getViewCountString(viewcount,item_id)
+{
+	var counter = viewcount;
+	if( viewcount < 10 ) var counter = '00'+viewcount;
+	else if( viewcount < 100 ) var counter = '0'+viewcount;
+	if(viewcount==0)
+		return '<span id="viewcount'+item_id+'counter_2" style="display:none;">'+counter+'</span><span style="color: black;"> Ei katsottu (uusi)</span>'
+	return '<span id="viewcount'+item_id+'counter_2" style="display:none;">'+counter+'</span>Katsottu ('+viewcount+" kertaa)"
+}
+//------------------------------------------------------------------------------
+function incTrashBinCounter()
+{
+	if( $("trash_bin_count") != null )
+	{
+		var count = parseInt( $("trash_bin_count").innerHTML, 10 );
+		count++;
+		$("trash_bin_count").setHTML( count);
+	}
+}
+//------------------------------------------------------------------------------
+function winPosChanged()
+{
+	var new_x = leaveOnlyNumbers( $('setting-window-x').value );
+	if( new_x < 0 ) new_x = 0;
+	SETTINGS_window_x = new_x;
+
+	var new_y = leaveOnlyNumbers( $('setting-window-y').value );
+	if( new_y < 0 ) new_y = 0;
+	SETTINGS_window_y = new_y;
+
+	saveSettings();
+	resizeWindow(width,height);
+}
+
+//------------------------------------------------------------------------------
+function trim(s)
+{
+	var l=0;
+	var r=s.length -1;
+	while(l < s.length && s.charAt(l) == ' ')
+	{
+		l++;
+	}
+	while(r > l && s.charAt(r) == ' ')
+	{
+		r-=1;
+	}
+	return s.substring(l, r+1);
+}
+//------------------------------------------------------------------------------
+var allRecordsLoaded=function(){
+	//$('dup_log').setHTML( $('dup_log').innerHTML+' kaikki ladattu' );
+
+	// Get ids of records in current folder
+	var record_ids = [];
+	var record_program_ids = [];
+	var record_names = [];
+	var record_descs = [];
+	var rid = 0;
+	var i=0;
+	var words = [];
+	var desc;
+	$$('.program-row').each(function(el)
+		{
+			rid = el.id.replace(/\D/g,""); record_ids[i] = rid;
+			pid = el.pid.replace(/\D/g,""); record_program_ids[i] = pid;
+
+			// filter out post comments from names e.g. (k-15)
+			words = $('program'+rid+'details').innerHTML.split(" ");
+			if( words.length == 1 )
+				name = words[0];
+			else
+			{
+				var last_word = words.pop();
+				name = words.join(' ');
+				if( pos_in_array( last_word, duplicate_name_drop ) == -1 )
+					name += ' '+last_word;
+			}
+			record_names[ rid ] = trim(name).toUpperCase();
+
+			// filter out strings from descriptions
+			desc = progDescArray[ rid ];
+			if( desc != CONST_record_has_no_desc )
+			{
+				for( j=0; j<duplicate_desc_drop.length; j++ )
+				{
+					var re = new RegExp(duplicate_desc_drop[j].escapeRegExp(),"g");
+					desc = trim(desc.replace( re , "" ));
+				}
+			}
+			record_descs[rid] = trim(desc).toUpperCase();
+			//if( progDescArray[ rid ] != record_descs[rid] ) alert( "'"+progDescArray[ rid ]+"' != \n'"+record_descs[rid]+"' ?= \n'"+desc+"'" ); // DEBUG
+
+			// remove DUP marks
+			$( 'program'+rid+'duplicate' ).setHTML('&nbsp;');
+
+			i++;
+		}
+	)
+
+	// Find and mark duplicates
+	var html = '';
+	var dup_html = '';
+	var duplicate_count = 0;
+	var same_names;
+	var is_duplicate;
+	var row_obj;
+	var add_class;
+	for( i=0; i<record_ids.length; i++ )
+	{
+		dup_html = '';
+		source_desc = record_descs[ record_ids[i] ];
+		source_name = record_names[ record_ids[i] ];
+		for( j=i+1; j<record_ids.length; j++ )
+		{
+			is_duplicate = false;
+			same_names = ( source_name == record_names[ record_ids[j] ] ) ? true : false;
+
+			if( source_desc == CONST_record_has_no_desc )
+			{
+				;
+			}
+			else
+			{
+				if( source_desc == record_descs[ record_ids[j] ] && same_names )
+				{
+					is_duplicate = true;
+				}
+			}
+
+			if( is_duplicate )
+			{
+				duplicate_count++;
+				$( 'program'+record_ids[j]+'duplicate' ).setHTML('<span onmouseover="show_original('+record_ids[i]+','+record_ids[j]+',1,0);" onmouseout="show_original('+record_ids[i]+','+record_ids[j]+',0,0);" style="color: red;">DUP</span>');
+				var record_row=$("program"+record_ids[j]+"row")
+				var checkbox=$("program"+record_ids[j]+"check")
+				add_class = '';
+				if(!record_row.hasClass("removed-row"))
+				{
+					if(!record_row.hasClass("selected-row"))
+					{
+						add_class = ' selected-row';
+						record_row.addClass("selected-row")
+						programIdArray.push(record_ids[j])
+						programViewIdArray.push(record_program_ids[j])
+						checkbox.setProperty("checked","checked")
+					}
+				}
+				row_obj = $('program'+record_ids[j]+'row');
+				dup_html = '<tr class="program-row'+add_class+'" id="'+row_obj.id+'" pid="'+row_obj.pid+'">'
+				dup_html += $('program'+record_ids[j]+'row').innerHTML+'</tr>';
+			}
+		}  // for j
+		if( dup_html != '' )
+		{
+			row_obj = $('program'+record_ids[i]+'row');
+			html += '<tr class="program-row" id="'+row_obj.id+'" pid="'+row_obj.pid+'">'
+			html += $('program'+record_ids[i]+'row').innerHTML+'</tr>';
+			html += dup_html+'</tr>';
+		}
+	} // for i
+
+	// Done
+	$("status").setHTML("OK")
+
+
+	var text = '';
+	if( duplicate_count == 0 )
+	{
+		text+= '<br><br><b>Kaksoiskappaleita ei lˆytynyt</b><br>'
+		$('duplicate_status').setHTML(text);
+		var btn_cancel=$("submit-cancel")
+		var btn_search=$("submit-search")
+		btn_cancel.removeProperty("disabled")
+		btn_cancel.value = 'Sulje';
+		btn_search.addClass('hide');
+	}
+	else
+	{
+		var d=$("modal-box")
+		d.setStyle("display","none")
+
+		$("data").innerHTML='<div id="location">'+$('location').innerHTML+'</div><table cellpadding="0" cellspacing="0" border=0>'+html+'</table>';
+		var bg=$("modal-bg")
+		bg.setStyle("display","none")
+		$("add-folder").setProperty("disabled","disabled")
+		$("find-duplicates").setProperty("disabled","disabled")
+		if( duplicate_count == 1 )
+			text+= 'Lˆytyi yksi kaksoiskappale';
+		else
+			text+= 'Lˆytyi '+duplicate_count+' kaksoiskappaletta';
+		$("status").setHTML("OK. "+text)
+	}
+}
+//------------------------------------------------------------------------------
+function show_original( original_record_id, dup_record_id, state, ypos )
+{
+	if( state == 1 )
+	{
+		var org = $( 'program'+original_record_id+'details' );
+		var dup = $( 'program'+dup_record_id+'details' );
+		var html = '';
+		html += 'Alkuper‰isen tiedot:<br>';
+		if( org == null )
+		{
+			html += '(poistettu tai siirretty)';
+		}
+		else
+		{
+			html += '<b>'+org.innerHTML+'</b><br>';
+			var row = $('program'+original_record_id+'row').innerHTML;
+			var tds = row.split('<TD $included="null">');
+			html += tds[3]+' ';
+			html += tds[4]+'<br><br>';
+			if( progDescArray[original_record_id] != null )
+				html += progDescArray[original_record_id];
+			else
+				html += '?';
+		}
+		if( dup != null )
+		{
+			html += '<hr>Kaksoiskappaleen tiedot:<br>';
+			html += '<b>'+dup.innerHTML+'</b><br>';
+			var row = $('program'+dup_record_id+'row').innerHTML;
+			var tds = row.split('<TD $included="null">');
+			html += tds[3]+' ';
+			html += tds[4]+'<br><br>';
+			if( progDescArray[dup_record_id] != null )
+				html += progDescArray[dup_record_id];
+			else
+				html += '?';
+		}
+		$('popup-dialog').setHTML( html );
+		if( ypos > 0 )
+		{
+			$('popup-dialog').setStyle("top", ypos+'px');
+		}
+		else
+		{
+			var elem_dup = $('program'+dup_record_id+'duplicate');
+			var pos = elem_dup.getPosition();
+			ypos = (pos.y-(4+240+4)-20);
+			if( ypos < 0 ) ypos = pos.y+25;
+			$('popup-dialog').setStyle("top", ypos+'px');
+		}
+		$('popup-dialog').setStyle("display","block");
+		if( $( 'program'+original_record_id+'details' ) != null ) $( 'program'+original_record_id+'details' ).addClass( 'duplicate' );
+	}
+	else
+	{
+		$('popup-dialog').setStyle("display","none")
+		if( $( 'program'+original_record_id+'details' ) != null ) $( 'program'+original_record_id+'details' ).removeClass( 'duplicate' );
+	}
+}
+//------------------------------------------------------------------------------
+var getRecordsFromFolder=function(folder_id){
+	myTable.sort(3,SETTINGS_duplicate_pre_sorting);
+	$('duplicate_status').setHTML('<br><b>Haetaan kuvauksia Elisa Viihteest‰:</b> <span id="records_desc_got">?</span> / <span id="recordings_in_folder">?</span> &nbsp; Odota...<br>');
+	// Get ids of records in current folder
+	var record_ids = [];
+	var rid = 0;
+	var i=0;
+	$$('.program-row').each(function(el) { rid = el.id.replace(/\D/g,""); record_ids[i] = rid; i++; })
+
+	var to_be_loaded = record_ids.length;
+
+	if( to_be_loaded == 0 )
+	{
+		$('duplicate_status').setHTML('<br><b>Kansiossa ei ole tallenteita</b>');
+		$("submit-cancel").removeProperty("disabled")
+		return;
+	}
+
+	$('duplicate_status').removeClass('hide');
+
+
+	$('recordings_in_folder').setHTML( to_be_loaded );
+	var counter = 0;
+
+	for( i=0; i<record_ids.length; i++ )
+	{
+		//if( progDescArray[ record_ids[i] ] )
+		if( record_infos[ record_ids[i] ] )
+		{
+			counter++;
+			$('records_desc_got').setHTML( counter );
+			//$('dup_log').setHTML( $('dup_log').innerHTML+' '+counter );
+			to_be_loaded--;
+			if( to_be_loaded < 1 )
+			{
+				allRecordsLoaded();
+				return;
+			}
+		}
+		else
+		{
+			//$('dup_log').setHTML( $('dup_log').innerHTML+' get('+record_ids[i]+') ' );
+			var a=new Json.Remote( "https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/info/"+record_ids[i]+"?v=2.1&platform=online&appVersion=1.0&includeMetadata=true",
+				{ method:"GET",onComplete:function(c)
+					{
+						record_infos[c.id]=c;
+						counter++;
+						//$('dup_log').setHTML( $('dup_log').innerHTML+' got('+c.id+')' );
+						$('records_desc_got').setHTML( counter );
+						if(!c.description)
+						{
+							c.description= CONST_record_has_no_desc
+						}
+						var shortTxt=c.description
+
+						to_be_loaded--;
+						if( to_be_loaded < 1 )
+						{
+							allRecordsLoaded();
+							return;
+						}
+					}
+				}
+			).setHeader("Authorization","Bearer "+bearer).send();
+		}
+	} // for
+
+}
+//------------------------------------------------------------------------------
+var getDirectory=function(b,a){
+	programIdArray.length=0;
+	programViewIdArray.length=0;
+	if( a == SETTINGS_trash_bin_name )
+	{
+		$("add-folder").setProperty("disabled","disabled")
+		$("find-duplicates").setProperty("disabled","disabled")
+		$("empty-trash-bin").removeClass("hide")
+	}
+	else
+	{
+		$("add-folder").removeProperty("disabled")
+		$("find-duplicates").removeProperty("disabled")
+		$("empty-trash-bin").addClass("hide")
+	}
+	foldernameCurrent=""
+	var d=false
+	var h=false
+	var g=new Array()
+	var c=new Array()
+	var f=new Array()
+	var t=''
+	f.push("")
+	var k='<b>Kansio:</b> <span id="folder-root" onClick="getDirectory(id, \'\');" class="link">(oletus)</span>'
+	folderArray.push(b)
+	if(b=="folder-back")
+	{
+		d=true
+	}
+	if(b=="folder-root")
+	{
+		h=true
+	}
+	if(h)
+	{
+		b=""
+		folderidCurrent="0"
+		folderTraceArray.length=0
+		idTraceArray.length=0
+	}
+
+	if(d)
+	{
+		folderArray.pop()
+		folderArray.pop()
+		b=folderArray[folderArray.length-1]
+	}
+
+	var b=b.replace(/\D/g,"")
+	if(newTrace==""||h||d)
+	{
+		newTrace=k
+	}
+	else
+	{
+		folderTraceArray.push(a)
+		idTraceArray.push(b)
+		newTrace=k
+		for(i=0;i<folderTraceArray.length;i++)
+		{
+			if(idTraceArray[i]!=b)
+			{
+				newTrace+=' &rsaquo; <span id="folder'+idTraceArray[i]+'open" name="'+escape(folderTraceArray[i])+'" onClick="getDirectory(id, name);" class="link">'+folderTraceArray[i]+"</span>"
+				g.push(folderTraceArray[i])
+				c.push(idTraceArray[i])
+				f.push("folder"+idTraceArray[i]+"open")
+			}
+			else
+			{
+				newTrace+=' &rsaquo; <span id="folder'+idTraceArray[i]+'open" name="'+escape(folderTraceArray[i])+'" onClick="getDirectory(id, name);" class="link">'+folderTraceArray[i]+"</span>"
+				g.push(folderTraceArray[i])
+				c.push(idTraceArray[i])
+				f.push("folder"+idTraceArray[i]+"open")
+				foldernameCurrent=escape(folderTraceArray[i])
+				break
+			}
+		}
+		folderTraceArray=g
+		idTraceArray=c
+		folderArray=f
+	}
+
+	if(d)
+	{
+		folderTraceArray.pop()
+		idTraceArray.pop()
+		for(i=0;i<folderTraceArray.length;i++){
+			newTrace+=' &rsaquo; <span id="folder'+idTraceArray[i]+'open" name="'+escape(folderTraceArray[i])+'" onClick="getDirectory(id, name);" class="link">'+folderTraceArray[i]+"</span>"
+			foldernameCurrent=escape(folderTraceArray[i])}
+	}
+	folderidCurrent=b
+	if(h) folderidCurrent=0;
+	$("data").innerHTML=""
+	var j_=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/folder/"+folderidCurrent+"?v=2.1&page=0&pageSize=10000&platform=ios&appVersion=1.0",{ method:"GET",onComplete:function(x_){
+
+
+		var j=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders?v=2&platform=ios&appVersion=1.0",{
+			method:"GET",onRequest:showLoading,onComplete:function(q){
+				stopLoading()
+
+				var trash_bin_folder_found = false;
+				var root_folder = false
+
+				if( foldernameCurrent=='' ) root_folder = true;
+
+				var folder_number1 = 0
+				var folder_number2 = 0
+				var folder_number3 = 0
+				var folder_level = 0
+				var folders_length = q.folders.length
+				var recordings_in_folder = q.recordingsCount
+
+				for(i=0;i<q.folders.length;i++)
+				{
+					if( q.folders[i].id == folderidCurrent )
+					{
+						folder_number1 = i
+						folder_level = 1
+						folders_length = q.folders[i].folders.length
+						recordings_in_folder = q.folders[i].recordingsCount
+						break
+					}
+					for(i_=0;i_<q.folders[i].folders.length;i_++)
+					{
+						if( q.folders[i].folders[i_].id == folderidCurrent )
+						{
+							folder_number1 = i
+							folder_number2 = i_
+							folder_level = 2
+							folders_length = q.folders[i].folders[i_].folders.length
+							recordings_in_folder = q.folders[i].folders[i_].recordingsCount
+							break
+						}
+						for(i__=0;i__<q.folders[i].folders[i_].folders.length;i__++)
+						{
+							if( q.folders[i].folders[i_].folders[i__].id == folderidCurrent )
+							{
+								folder_number1 = i
+								folder_number2 = i_
+								folder_number3 = i__
+								folder_level = 3
+								folders_length = q.folders[i].folders[i_].folders[i__].folders.length
+								recordings_in_folder = q.folders[i].folders[i_].folders[i__].recordingsCount
+								break
+							}
+						}
+					}
+				}
+
+				if( use_trash_bin == "yes" && trash_bin_folder_id == -1 && root_folder )
+				{
+					if( SETTINGS_trash_bin_name == null )
+					{
+						for(i=0;i<q.folders.length;i++)
+						{
+							var posi = pos_in_array( q.folders[i].name, trash_bin_names );
+							if( posi > -1 )
+							{
+								SETTINGS_trash_bin_name = q.folders[i].name;
+								trash_bin_folder_id = q.folders[i].id
+								trash_bin_folder_found = true;
+								break;
+							}
+						}
+						if( trash_bin_folder_found == false )
+						{
+							SETTINGS_trash_bin_name = trash_bin_names[0];
+						}
+						saveSettings();
+					}
+					else
+					{
+						for(i=0;i<q.folders.length;i++)
+						{
+							if( q.folders[i].name == SETTINGS_trash_bin_name )
+							{
+								trash_bin_folder_id = q.folders[i].id
+								trash_bin_folder_found = true;
+								break;
+							}
+						}
+					}
+					if( trash_bin_folder_found == false )
+					{
+						var s=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders?v=0.1&platform=ios&appVersion=1.0",{ method:"PUT",onRequest:showLoadingNewFolder,onComplete:function(x){
+							var y=function()
+							{
+								stopLoading()
+								getDirectory("folder-root","")
+								return;
+							}
+							y.delay(100)
+						}
+						}).setHeader("Content-Type","application/x-www-form-urlencoded").setHeader("Authorization","Bearer "+bearer).send('name='+SETTINGS_trash_bin_name)
+						return;
+					}
+				}
+				$("menu-area").setStyle("display","block")
+				$("navi").setStyle("display","block")
+				$("recordings").addClass("active")
+				var s="OK, kansiossa "
+
+				var folder_count = folders_length;
+				if( trash_bin_folder_found ) folder_count--;
+				if(folder_count!=0)
+				{
+					s+=folder_count
+					if(folder_count==1)
+					{
+						s+=" alikansio ja "
+					}
+					else
+					{
+						s+=" alikansiota ja "
+					}
+				}
+				s+=recordings_in_folder
+				if(recordings_in_folder==1)
+				{
+					s+=" tallenne"
+				}
+				else
+				{
+					s+=" tallennetta"
+				}
+				$("status").setHTML(s)
+				$("data").setStyle("display","block")
+				t='<div id="location">'+newTrace+"</div>"
+				t+='<table cellspacing="0" cellpadding="0" id="myTable">'
+				t+="<thead>"
+				if( SETTINGS_checkbox_left == 1 )
+					t+='<th class="disable-sorting"><input type="checkbox" id="select-all" onClick="toggleMassButtons(id);" class="checkbox"></th>'
+				t+='<th axis="string">Alikansio tai tallenne</th>'
+				t+='<th class="disable-sorting">&nbsp;</th>'
+				t+='<th axis="string">Kanava</th>'
+				t+='<th id="lahetysaika" axis="custom">L‰hetysaika</th>'
+				t+='<th axis="string">Tila</th>'
+				t+='<th class="disable-sorting">Toiminnot</th>'
+				if( root_folder )
+					t+='<th class="disable-sorting">Lapsille</th>'
+				else
+					t+='<th class="disable-sorting">&nbsp;</th>'
+				if( SETTINGS_checkbox_left != 1 )
+					t+='<th class="disable-sorting"><input type="checkbox" id="select-all" onClick="toggleMassButtons(id);" class="checkbox"></th>'
+				t+="</thead>"
+				t+="<tbody>"
+				if(folderidCurrent!="0")
+				{
+					t+="<tr>"
+					if( SETTINGS_checkbox_left == 1 )
+						t+="<td>-</td>"
+					t+='<td class="folderUp"><a></a>&nbsp;<span id="folder-root" onClick="getDirectory(id, \'\');" class="link" style="color:#444444;">alkuun</span></td>'
+					t+="<td>&nbsp;</td>"
+					t+="<td>-</td>"
+					t+="<td>-</td>"
+					t+="<td>-</td>"
+					t+='<td><span id="folder-root" onClick="getDirectory(id, \'\');" class="link">Takaisin p‰‰kansioon</span>&nbsp;&nbsp;&nbsp;</td>'
+					t+="<td>-</td>"
+					if( SETTINGS_checkbox_left != 1 )
+						t+="<td>-</td>"
+					t+="</tr>"
+					t+="<tr>"
+					if( SETTINGS_checkbox_left == 1 )
+						t+="<td>-</td>"
+					t+='<td class="folderUp"><a></a>&nbsp;<span id="folder-back" onClick="getDirectory(id, \'\');" class="link" style="color:#444444;">edellinen kansio</span></td>'
+					t+="<td>&nbsp;</td>"
+					t+="<td>-</td>"
+					t+="<td>-</td>"
+					t+="<td>-</td>"
+					t+='<td><span id="folder-back" onClick="getDirectory(id, \'\');" class="link">Takaisin edelliseen kansioon</span>&nbsp;&nbsp;&nbsp;</td>'
+					t+="<td>-</td>"
+					if( SETTINGS_checkbox_left != 1 )
+						t+="<td>-</td>"
+					t+="</tr>"
+				}
+
+
+				var trash_bin_html = '';
+				if(folders_length!=0) //----------------------------------------
+				{
+					for(i=0;i<folders_length;i++)
+					{
+						var n=''
+						var l=''
+						var y=''
+						var r=''
+						var show_folder = true;
+						var is_child_folder = child_on;
+						if( root_folder )
+						{
+							n=q.folders[i].id
+							l=q.folders[i].name
+							y=q.folders[i].size
+							r=q.folders[i].totalRecordingsCount
+							var posi = pos_in_array( n, SETTINGS_child_folders );
+							if( posi == -1 )
+							{
+								is_child_folder = child_off;
+								if( SETTINGS_child_mode == 1 ) show_folder = false;
+							}
+						}
+						else if( folder_level == 1)
+						{
+							n=q.folders[folder_number1].folders[i].id
+							l=q.folders[folder_number1].folders[i].name
+							y=q.folders[folder_number1].folders[i].size
+							r=q.folders[folder_number1].folders[i].totalRecordingsCount
+						}
+						else if( folder_level == 2)
+						{
+							n=q.folders[folder_number1].folders[folder_number2].folders[i].id
+							l=q.folders[folder_number1].folders[folder_number2].folders[i].name
+							y=q.folders[folder_number1].folders[folder_number2].folders[i].size
+							r=q.folders[folder_number1].folders[folder_number2].folders[i].totalRecordingsCount
+						}
+						else if( folder_level == 3)
+						{
+							n=q.folders[folder_number1].folders[folder_number2].folders[folder_number3].folders[i].id
+							l=q.folders[folder_number1].folders[folder_number2].folders[folder_number3].folders[i].name
+							y=q.folders[folder_number1].folders[folder_number2].folders[folder_number3].folders[i].size
+							r=q.folders[folder_number1].folders[folder_number2].folders[folder_number3].folders[i].totalRecordingsCount
+						}
+						if( show_folder )
+						{
+							if( use_trash_bin == "yes" && n == trash_bin_folder_id )
+							{
+								if( SETTINGS_trash_bin_position == 1 )
+								{
+									html='<tr id="folder'+n+'row">'
+									html+='<td class="folderTrash"><a style="display: none;"></a>&nbsp;<span id="folder'+n+'open" name="'+l+'" onClick="getDirectory(id, name);" class="link">roskakori</span> (<span id="trash_bin_count">'+r+'</span>)</td>'
+									html+="</tr>"
+									trash_bin_html = html;
+								}
+								else
+								{
+									html='<tr id="folder'+n+'row">'
+									if( SETTINGS_checkbox_left == 1 )
+										html+="<td>-</td>"
+									html+='<td class="folderTrash"><a style="display: none;"></a>&nbsp;<span id="folder'+n+'open" name="'+l+'" onClick="getDirectory(id, name);" class="link">roskakori</span> (<span id="trash_bin_count">'+r+'</span>)</td>'
+									html+="<td>&nbsp;</td>"
+									html+="<td>-</td>"
+									html+="<td>-</td>"
+									html+="<td>-</td>"
+									html+="<td>-</td>"
+									html+="<td>-</td>"
+									if( SETTINGS_checkbox_left != 1 )
+										html+="<td>-</td>"
+									html+="</tr>"
+									t+=html;
+								}
+							}
+							else
+							{
+								html='<tr id="folder'+n+'row">'
+								if( SETTINGS_checkbox_left == 1 )
+									html+="<td>-</td>"
+								html+='<td class="folder"><a></a>&nbsp;<span id="folder'+n+'open" name="'+l+'" onClick="getDirectory(id, name);" class="link">'+l+"</span> ("+r+")</td>"
+								html+="<td>&nbsp;</td>"
+								html+="<td>-</td>"
+								html+="<td>-</td>"
+								html+="<td>-</td>"
+								html+="<td>"
+								if( SETTINGS_child_mode == 0 )
+								{
+									html+='<span id="folder'+n+'open" name="'+l+'" onClick="editFolder(id, name);" class="link">Nime‰</span>&nbsp;&nbsp;&nbsp;'
+									html+='<span id="folder'+n+'open" onClick="deleteFolder(id);" class="link">Poista</span>&nbsp;&nbsp;&nbsp;'
+								}
+								html+="</td>"
+								if( SETTINGS_child_mode == 1 || !root_folder )
+									html+='<td></td>'
+								else
+									html+='<td><span id="folder'+n+'child" onClick="toggleChildFlag( id );" class="link">'+is_child_folder+'</span>&nbsp;&nbsp;&nbsp;</td>'
+								if( SETTINGS_checkbox_left != 1 )
+									html+="<td>-</td>"
+								html+="</tr>"
+								t+=html;
+							}
+						}
+					}
+				}
+
+
+				if( x_.recordings.length!=0 ) //-----------------------------------
+				{
+
+					for(i=0;i<x_.recordings.length;i++)
+						{
+						if( x_.recordings[i].recordingState=='finished' )
+						{
+							var p=x_.recordings[i].programId
+							var n=x_.recordings[i].recordingId
+							var x=x_.recordings[i].folderId
+							var l=x_.recordings[i].name
+							progNameArray[p]=l
+							var v=x_.recordings[i].channelName
+							var u=x_.recordings[i].startTime
+							if (!x_.recordings[i].description) progDescArray[p]=CONST_record_has_no_desc;
+							else progDescArray[p]=x_.recordings[i].description;
+							var m=2
+
+							var show_record = true;
+							if( root_folder )
+							{
+								var is_child_record = child_on;
+								var posi = pos_in_array( n, SETTINGS_child_folders );
+								if( posi == -1 )
+								{
+									is_child_record = child_off;
+									if( SETTINGS_child_mode == 1 ) show_record = false;
+								}
+							}
+							if( show_record )
+							{
+								t+='<tr class="program-row" id="program'+p+'row" pid="program'+n+'pid">'
+								if( SETTINGS_checkbox_left == 1 )
+									t+='<td><input type="checkbox" id="program'+p+'check" pid="program'+n+'check" onClick="toggleMassButtons(id, pid);" class="checkbox"></td>'
+								t+='<td>'
+								t+='<div style="position:relative">'
+								t+='<span id="program'+p+'details" style="position:relative; TOP:0px; LEFT:34px;" onClick="showDetails(id);" onmouseover="tipsDetails(id)"; title="FOO"; class="link">'+l+"</span>"
+								t+='<span id="program'+p+'play" onClick="loadMPC(id, false);" class="link"><img src="images/play.png" style="position:absolute; TOP:-2px; LEFT:-2;"></span>'
+								if( SETTINGS_child_mode != 1 )
+								{
+									var posi2 = pos_in_array( p, downloaded_record_ids );
+									if( posi2 == -1 )
+										t+='<span onClick="download('+p+');" class="link"><img id="dl_'+p+'_img" src="images/icon-download.jpg" style="position:absolute; TOP:-2px; LEFT:15;"></span>'
+									else
+										t+='<span onClick="download('+p+');" class="link"><img id="dl_'+p+'_img" src="images/icon-downloaded.jpg" style="position:absolute; TOP:-2px; LEFT:15;"></span>'
+								}
+								t+='</div></td>'
+								t+='<td><span id="program'+p+'duplicate">&nbsp;</span></td>'
+								t+="<td>"+v+"</td>"
+								t+="<td>"+start_time_to_text(u)+"</td>"
+								t+='<td id="viewcount'+p+'">'+getViewCountString(m,p)+'</td>'
+								t+="<td>"
+								if( SETTINGS_child_mode == 1 )
+									t+='-';
+								else
+								{
+									t+='<span id="program'+p+'move" pid="program'+n+'move" onClick="moveProgram(id);" class="link">Siirr‰</span>&nbsp;&nbsp;&nbsp;'
+									if( folderidCurrent != trash_bin_folder_id )
+										t+='<span id="program'+p+'trash" pid="program'+n+'trash" onClick="moveProgramToTrashBin(id, id);" class="link">Poista</span>&nbsp;&nbsp;&nbsp;'
+									else
+										t+='<span id="program'+p+'delete" pid="program'+n+'delete" onClick="deleteProgram(id, pid);" class="link">Poista</span>&nbsp;&nbsp;&nbsp;'
+								}
+								t+="</td>"
+								if( SETTINGS_child_mode == 1 )
+								{
+									t+='<td></td>'
+									t+='<td></td>'
+								}
+								else
+								{
+									if( root_folder )
+										t+='<td><span id="record'+n+'child" onClick="toggleChildFlag( id );" class="link">'+is_child_record+'</span>&nbsp;&nbsp;&nbsp;</td>'
+									else
+										t+='<td>&nbsp;</td>'
+									if( SETTINGS_checkbox_left != 1 )
+										t+='<td><input type="checkbox" id="program'+p+'check" pid="program'+n+'check" onClick="toggleMassButtons(id, pid);" class="checkbox"></td>'
+								}
+								t+="</tr>"
+							}
+
+						}
+					}
+				}
+				else
+				{
+					t+="<tr>"
+					t+="<td>Kansiossa ei ole tallenteita</td>"
+					t+="<td>-</td>"
+					t+="<td>-</td>"
+					t+="<td>-</td>"
+					t+="<td>-</td>"
+					t+="<td>-</td>"
+					t+="<td>-</td>"
+					t+="<td>-</td>"
+					t+="</tr>"
+				}
+
+				t+="</tbody>"
+				t+="</table>"
+
+				if( trash_bin_html != '' )
+				{
+					t+='<table>'
+					t+= trash_bin_html;
+					t+="</table>"
+				}
+
+				$("data").innerHTML=t
+				checkSortingOrder()
+				myTable=new sortableTable("myTable",{
+					sortOn:checkSortingColumn(),sortBy:sortBy}
+				)}
+		}).setHeader("Authorization","Bearer "+bearer).send()
+	}}).setHeader("Authorization","Bearer "+bearer).send()
+
+	$("mass-delete").removeEvents()
+	$("mass-delete").addEvent("click",function(q_){
+		var move_to_trash_bin = false;
+		if( use_trash_bin == "yes" && folderidCurrent != trash_bin_folder_id ) move_to_trash_bin = true;
+		new Event(q_).stop()
+		if( move_to_trash_bin )
+			$("status").setHTML("Tallenteiden poistaminen roskakoriin")
+		else
+			$("status").setHTML("Tallenteiden poistaminen")
+		var m=$("modal-bg")
+		var l=$("modal-box")
+		if(programIdArray.length!=0)
+		{
+			if( move_to_trash_bin )
+			{
+				var p="<h2>Tallenteiden poistaminen roskakoriin</h2>"
+				p+='<div class="program-desc">'
+				p+='Haluatko varmasti poistaa valitut tallenteet?<br>Poistamisen j‰lkeen tallenteet lˆyt‰‰ roskakorista.</div>'
+			}
+			else
+			{
+				var p="<h2>Tallenteiden poistaminen</h2>"
+				p+='<div class="program-desc">'
+				p+='<img src="images/icon-important.png" style="float: left; margin-right: 20px;">';
+				p+='Haluatko varmasti poistaa valitut tallenteet?<br>Poistamisen j‰lkeen tallenteita ei ole en‰‰ mahdollista palauttaa.</div>'
+			}
+			p+='<input type="submit" id="submit-delete" class="button" value="Poista"> '
+			p+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
+			m.setStyle("display","block")
+			l.setStyle("display","block")
+			l.innerHTML='<div id="modal-box-top"></div>'
+			l.innerHTML+='<div id="modal-box-body">'+p+"</div>"
+			l.innerHTML+='<div id="modal-box-bottom"></div>'
+			var n=$("submit-cancel")
+			var r=$("submit-delete")
+			r.addEvent("click",function(v)
+				{
+					new Event(v).stop()
+					m.setStyle("display","none")
+					l.setStyle("display","none")
+					var u=0
+					var t=programIdArray.length;
+					showLoadingMassDelete()
+					$("total-items").setHTML(t)
+					$("mass-move").setProperty("disabled","disabled")
+					$("mass-delete").setProperty("disabled","disabled")
+					//$("add-folder").setProperty("disabled","disabled")
+					var moveList=''
+					for(i=0;i<programIdArray.length;i++)
+					{
+						//        if( $("program"+programIdArray[i]+"row") == null ) continue; // checked record is in other folder
+						$("program"+programIdArray[i]+"row").addClass("removed-row")
+						$("program"+programIdArray[i]+"row").addClass("hide")
+						$("program"+programIdArray[i]+"row").remove()
+						if( move_to_trash_bin )
+						{
+
+							moveList+=programIdArray[i]+','
+							incTrashBinCounter();
+							u++
+							$("current-item").setHTML(u)
+
+							if(u==t)
+							{
+								stopLoading()
+								$("status").setHTML("OK, tallenteet poistettu roskakoriin")
+								$("mass-move").removeProperty("disabled")
+								$("mass-delete").removeProperty("disabled")
+								//$("add-folder").removeProperty("disabled")
+								programIdArray.length=0;
+								programViewIdArray.length=0
+								var s=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/move?v=2&platform=ios&appVersion=1.0",{method:"PUT",onComplete:function(x){}
+								}).setHeader("Content-Type","application/x-www-form-urlencoded").setHeader("Authorization","Bearer "+bearer).send("programId="+moveList+"&folderId="+trash_bin_folder_id)
+							}
+
+						}
+						else
+						{
+							var s=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/program.sl?removep="+programViewIdArray[i]+"&ajax=true&"+hash(),{
+								method:"GET",onComplete:function(x){
+									u++
+									$("current-item").setHTML(u)
+									if(u==t)
+									{
+										stopLoading()
+										$("status").setHTML("OK, tallenteet poistettu")
+										$("mass-move").removeProperty("disabled")
+										$("mass-delete").removeProperty("disabled")
+										//$("add-folder").removeProperty("disabled")
+										programIdArray.length=0;
+										programViewIdArray.length=0
+									}
+								}
+							}).send()
+						}
+					}
+				})
+		}
+		else
+		{
+			var p="<h2>Virhe</h2>"
+			p+='<div class="program-desc">Ennen kuin voit poistaa tallenteita, valitse ensin haluamasi tallenteet listasta.</div>'
+			p+='<input type="submit" id="submit-ok" class="button" value="  OK  "> '
+			m.setStyle("display","block")
+			l.setStyle("display","block")
+			l.innerHTML='<div id="modal-box-top"></div>'
+			l.innerHTML+='<div id="modal-box-body">'+p+"</div>"
+			l.innerHTML+='<div id="modal-box-bottom"></div>'
+			var n=$("submit-ok")}
+		n.addEvent("click",function(s)
+			{
+				new Event(s).stop()
+				m.setStyle("display","none")
+				l.setStyle("display","none")
+				$("status").setHTML("OK")
+			}
+		)
+	}
+	)
+
+	$("mass-move").removeEvents()
+	$("mass-move").addEvent("click",function(s){
+		new Event(s).stop()
+		var p=$("modal-bg")
+		var n=$("modal-box")
+		if(programIdArray.length!=0){
+			var l=""
+			var m=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders?v=2&platform=ios&appVersion=1.0",{
+				method:"GET",onRequest:showLoadingFolderList,onComplete:function(B){
+					$("status").setHTML("Tallenteiden siirt‰minen")
+					var x="<h2>Tallenteiden siirt‰minen</h2>"
+					x+='<div class="program-desc">'
+					x+="<b>Siirr‰ kansioon:</b><br><br>"
+					x+='<select class="select" id="dropdown-move">'
+					x+='<option value="none">'+l+"</option>"
+					x+='<option value="0">(oletus)</option>'
+					var folder_number1_=0
+					var folder_number2_=0
+					for(i=0;i<B.folders.length;i++){
+						var F=B.folders[i].id
+						var v=B.folders[i].name
+						var G=B.folders[i].size
+						x+='<option value="'+F+'">'
+						x+="&nbsp;&nbsp;"+v
+						x+="</option>"}
+					x+="</select>"
+					x+=' <select class="select" id="dropdown-move2">'
+					x+='<option value="none">'+l+"</option>"
+					x+="</select>"
+					x+=' <select class="select" id="dropdown-move3">'
+					x+='<option value="none">'+l+"</option>"
+					x+="</select>"
+					x+="<br><br>Siirton‰kym‰ tukee vain kolmen tason alikansiopuuta, joten syvemm‰ll‰ olevia alikansioita ei voi k‰ytt‰‰ t‰ll‰ sovelluksella."
+					x+="</div>"
+					x+='<input type="submit" id="submit-move" class="button" value="Siirr‰" disabled> '
+					x+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
+					var z=$("modal-bg")
+					var y=$("modal-box")
+					y.innerHTML='<div id="modal-box-top"></div>'
+					y.innerHTML+='<div id="modal-box-body">'+x+"</div>"
+					y.innerHTML+='<div id="modal-box-bottom"></div>'
+					z.setStyle("display","block")
+					y.setStyle("display","block")
+					var C=$("submit-cancel")
+					var A=$("submit-move")
+					var E=$("dropdown-move")
+					var u=$("dropdown-move2")
+					var t_=$("dropdown-move3")
+					var D=""
+					E.addEvent("change",function(){
+						var I=E.value
+						if(I=="none"){
+							A.setProperty("disabled","disabled")}
+						if(I!="none"){
+							A.removeProperty("disabled")
+							D=I}
+						if(I=="none"||I==""){
+							u.setHTML("")
+							var J=new Element("option",{value:"none"})
+							J.injectInside(u)
+							J.setHTML(l)
+							t_.setHTML("")
+							var J=new Element("option",{value:"none"})
+							J.injectInside(t_)
+							J.setHTML(l)}
+						if(I!="none"&&I!=""){
+							u.setHTML("")
+							var N=new Element("option",{value:"none"})
+							N.injectInside(u)
+							N.setHTML(l)
+							for(i=0;i<B.folders.length;i++) if(B.folders[i].id==I) folder_number1_=i;
+							for(i=0;i<B.folders[folder_number1_].folders.length;i++){
+								var O=B.folders[folder_number1_].folders[i].id
+								var L=B.folders[folder_number1_].folders[i].name
+								var M=B.folders[folder_number1_].folders[i].size
+								var N=new Element("option",{value:O})
+								N.injectInside(u)
+								N.setHTML(L)}}}
+					)
+					u.addEvent("change",function(){
+						var I=E.value
+						var K=u.value
+						if(K!="none"){
+							D=K}
+						if(K=="none"){
+							D=I}
+						if(K=="none"){
+							t_.setHTML("")
+							var J=new Element("option",{value:"none"})
+							J.injectInside(t_)
+							J.setHTML(l)}
+						if(K!="none"){
+							t_.setHTML("")
+							var O=new Element("option",{value:"none"})
+							O.injectInside(t_)
+							O.setHTML(l)
+							for(i=0;i<B.folders[folder_number1_].folders.length;i++) if(B.folders[folder_number1_].folders[i].id==K) folder_number2_=i;
+							for(i=0;i<B.folders[folder_number1_].folders[folder_number2_].folders.length;i++){
+								var P=B.folders[folder_number1_].folders[folder_number2_].folders[i].id
+								var M=B.folders[folder_number1_].folders[folder_number2_].folders[i].name
+								var N=B.folders[folder_number1_].folders[folder_number2_].folders[i].size
+								var O=new Element("option",{value:P})
+								O.injectInside(t_)
+								O.setHTML(M)}}}
+					)
+					t_.addEvent("change",function(){
+						var I=u.value
+						var H=t_.value
+						if(H!="none"){
+							D=H}
+						if(H=="none"){
+							D=I}}
+					)
+					C.addEvent("click",function(H){
+						new Event(H).stop()
+						try{
+							z.setStyle("display","none")
+							y.setStyle("display","none")
+							$("program"+b+"row").removeClass("active-row")
+						}catch(H){}
+						$("status").setHTML("OK")}
+					)
+					A.addEvent("click",function(J){
+						new Event(J).stop()
+						try{
+							z.setStyle("display","none")
+							y.setStyle("display","none")
+						}catch(J){}
+						var I=0
+						var K=programIdArray.length;showLoadingMassMove()
+						$("total-items").setHTML(K)
+						$("mass-move").setProperty("disabled","disabled")
+						$("mass-delete").setProperty("disabled","disabled")
+						//$("add-folder").setProperty("disabled","disabled")
+						var moveList=""
+						for(i=0;i<programIdArray.length;i++)
+						{
+							//  if( $("program"+programIdArray[i]+"row") == null ) continue; // checked record is in other folder
+							$("program"+programIdArray[i]+"row").addClass("removed-row")
+							$("program"+programIdArray[i]+"row").addClass("hide")
+							$("program"+programIdArray[i]+"row").remove()
+							moveList+=programIdArray[i]+','
+
+							I++
+							$("current-item").setHTML(I)
+							if(I==K)
+							{
+								stopLoading()
+								$("status").setHTML("OK, tallenteet siirretty")
+								$("mass-move").removeProperty("disabled")
+								$("mass-delete").removeProperty("disabled")
+								//$("add-folder").removeProperty("disabled")
+								programIdArray.length=0
+								programViewIdArray.length=0
+							}
+
+						}
+						var H=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/move?v=2&platform=ios&appVersion=1.0",{method:"PUT",onComplete:function(L)
+							{
+							}
+						}).setHeader("Content-Type","application/x-www-form-urlencoded").setHeader("Authorization","Bearer "+bearer).send("programId="+moveList+"&folderId="+D)
+
+					}
+					)}
+			}).setHeader("Authorization","Bearer "+bearer).send()
+		}else{
+			var r="<h2>Virhe</h2>"
+			r+='<div class="program-desc">Ennen kuin voit siirt‰‰ tallenteita, valitse ensin haluamasi tallenteet listasta.</div>'
+			r+='<input type="submit" id="submit-ok" class="button" value="  OK  "> '
+			p.setStyle("display","block")
+			n.setStyle("display","block")
+			n.innerHTML='<div id="modal-box-top"></div>'
+			n.innerHTML+='<div id="modal-box-body">'+r+"</div>"
+			n.innerHTML+='<div id="modal-box-bottom"></div>'
+			var q=$("submit-ok")
+			q.addEvent("click",function(t){
+				new Event(t).stop()
+				p.setStyle("display","none")
+				n.setStyle("display","none")
+				$("status").setHTML("OK")}
+			)}}
+	)
+
+	$("find-duplicates").removeEvents()
+	$("find-duplicates").addEvent("click",function(r){
+		new Event(r).stop()
+		$("status").setHTML("Kaksoiskappaleiden haku")
+		var n=$("modal-bg")
+		var m=$("modal-box")
+		var q="<h2>Kaksoiskappaleiden haku</h2>"
+		q+='<div class="program-desc">'
+		q+='Tallenteet tulkitaan samoiksi jos:<br>'
+		q+='<div style="margin: 5px; background-color:#2388C5; padding: 5px;">'
+		q+='nimet ovat samoja ( nimist‰ poistetaan lopusta '+duplicate_name_drop.join(", ")+' ennen vertailua )<br>JA<br>'
+		q+='tallenteella on kuvaus<br>JA<br>'
+		q+='kuvaukset ovat samoja ( kuvauksista poistetaan '+duplicate_desc_drop.join(", ")+' tekstit ennen vertailua )'
+		q+='</div>'
+		q+='<br>Kaksoiskappaleet valitaan ja merkit‰‰n punaisella DUP tekstill‰. '
+		q+='Viem‰ll‰ hiiren DUP tekstin p‰‰lle n‰et molempien tallenteiden tiedot ja alkuper‰isen tallenteen nimen tausta muuttuu punaiseksi.<br>'
+		q+='<br>'
+		q+='Huom:<br>kaksoiskappale tietoa ei talleteta mihink‰‰n. Tiedot h‰vi‰v‰t jos<br>vaihdat kansiota tai poistut ViihdeX Media Managerista.<br>Kuvaukset h‰vi‰v‰t v‰limuistista vain jos suljet ViihdeX Media Managerin.<br>'
+		q+='<div id="duplicate_status" class="hide">'
+		q+='</div>'
+		//q+='<div id="dup_log" style="border: 1px solid black; background-color: white; color: black;"></div>'
+		q+='<br>'
+		q+='<input type="submit" id="submit-search" class="button" value="Hae kaksoiskappaleet"> &nbsp; '
+		q+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
+		n.setStyle("display","block")
+		m.setStyle("display","block")
+		m.innerHTML='<div id="modal-box-top"></div>'
+		m.innerHTML+='<div id="modal-box-body">'+q+"</div>"
+		m.innerHTML+='<div id="modal-box-bottom"></div>'
+		var btn_cancel=$("submit-cancel")
+		var btn_search=$("submit-search")
+
+		btn_cancel.addEvent("click",function(s){
+			new Event(s).stop()
+			n.setStyle("display","none")
+			m.setStyle("display","none")
+			$("status").setHTML("OK")}
+		)
+
+		btn_search.addEvent("click",function(s){
+			new Event(s).stop()
+			btn_cancel.setProperty("disabled","disabled")
+			btn_search.setProperty("disabled","disabled")
+			$('duplicate_status').setHTML('<br><b>J‰rjestet‰‰n...</b><br>');
+			$('duplicate_status').removeClass('hide');
+			var t = setTimeout( 'allRecordsLoaded()', 50 );
+		});
+	});
+
+	$("add-folder").removeEvents()
+	$("add-folder").addEvent("click",function(r){
+		new Event(r).stop()
+		$("status").setHTML("Uuden kansion lis‰‰minen")
+		var n=$("modal-bg")
+		var m=$("modal-box")
+		var q="<h2>Uuden kansion lis‰‰minen</h2>"
+		q+='<div class="program-desc">'
+		q+="<b>Lis‰‰ kansio:</b><br><br>"
+		q+='<input type="text" id="new-folder" class="input" maxlength="64">'
+		q+="<br><br>Uusi kansio lis‰t‰‰n alikansioksi nykyiseen kansioon.</div>"
+		q+='<input type="submit" id="submit-new-folder" class="button" value="Lis‰‰"> '
+		q+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
+		n.setStyle("display","block")
+		m.setStyle("display","block")
+		m.innerHTML='<div id="modal-box-top"></div>'
+		m.innerHTML+='<div id="modal-box-body">'+q+"</div>"
+		m.innerHTML+='<div id="modal-box-bottom"></div>'
+		var p=$("submit-cancel")
+		var l=$("submit-new-folder")
+
+		l.addEvent("click",function(v){
+			new Event(v).stop()
+			n.setStyle("display","none")
+			m.setStyle("display","none")
+			var u=encodingFilter($("new-folder").value)
+			var send_text = ''
+			if( use_trash_bin == "yes" && foldernameCurrent=='' && $("new-folder").value == SETTINGS_trash_bin_name )
+			{
+				alert('Kansio '+$("new-folder").value+' on varattu ViihdeX Media Managerille');
+				return;
+			}
+			var t="https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders?v=0.1&platform=ios&appVersion=1.0"
+			if(folderidCurrent!="")
+			{
+				send_text="name="+u+"&parentFolderId="+folderidCurrent
+			}
+			else
+			{
+				send_text="name="+u
+			}
+			var s=new Json.Remote(t,{ method:"PUT",onRequest:showLoadingNewFolder,onComplete:function(x){
+				var y=function()
+				{
+					stopLoading()
+					if(folderidCurrent!="")
+					{
+						getDirectory(folderidCurrent,foldernameCurrent)
+					}
+					if(folderidCurrent=="")
+					{
+						getDirectory("folder-root","")
+					}
+				}
+				y.delay(500)}
+			}).setHeader("Content-Type","application/x-www-form-urlencoded").setHeader("Authorization","Bearer "+bearer).send(send_text)
+		})
+
+		p.addEvent("click",function(s){
+			new Event(s).stop()
+			n.setStyle("display","none")
+			m.setStyle("display","none")
+			$("status").setHTML("OK")}
+		)}
+	)
+
+	$("query").removeEvents()
+	$("query").addEvent("keydown",function(l){
+		var m=13
+		if(l.keyCode==m){
+			new Event(l).stop()
+			$("search").click()}}
+	)
+
+	$("search").removeEvents()
+	$("search").addEvent("click",function(n){
+		new Event(n).stop()
+		$("empty-trash-bin").addClass("hide")
+		programIdArray.length=0;
+		programViewIdArray.length=0;
+		$("add-folder").setProperty("disabled","disabled")
+		$("find-duplicates").setProperty("disabled","disabled")
+		var p='<div id="location">'+$('location').innerHTML+'</div>';
+		var l=encodingFilter($("query").value)
+		if(l!=""&&l!=" "&&l!="  "&&l!="   ")
+		{
+			$("data").innerHTML=p
+			var m=function()
+			{
+				var y=$("data")
+				var a_=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/search/query?q="+l+"&target=recording&pageSize=50&includeMetadata=true&platform=ios&protocol=hls",{method:"GET",onComplete:function(A)
+					{
+						var t=A.results.recording.searchHits.length
+						if(A.results.recording.searchHits.length!=0)
+						{
+							p+='<table cellspacing="0" cellpadding="0" id="myTable">'
+							p+="<thead>"
+							if( SETTINGS_checkbox_left == 1 )
+								p+='<th class="disable-sorting"><input type="checkbox" id="select-all" onClick="toggleMassButtons(id);" class="checkbox"></th>'
+							p+='<th axis="string">Tallenne</th>'
+							p+='<th axis="string">Kanava</th>'
+							p+='<th axis="custom">L‰hetysaika</th>'
+							p+='<th axis="string">Tila</th>'
+							p+='<th class="disable-sorting">Kansio</th>'
+							p+='<th class="disable-sorting">Toiminnot</th>'
+							if( SETTINGS_checkbox_left != 1 )
+								p+='<th class="disable-sorting"><input type="checkbox" id="select-all" onClick="toggleMassButtons(id);" class="checkbox"></th>'
+							p+="</thead>"
+							p+="<tbody>"
+						}
+						var b_=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders?v=2.1&platform=ios&appVersion=1.0",{
+							method:"GET",onRequest:showLoadingFolderList,onComplete:function(B){
+
+								for(i=0;i<A.results.recording.searchHits.length;i++)
+								{
+									var s=A.results.recording.searchHits[i].id
+									var u=A.results.recording.searchHits[i].id
+									var v_=A.results.recording.searchHits[i].folderId
+									var q=A.results.recording.searchHits[i].title
+									var z=A.results.recording.searchHits[i].source
+									var x_=A.results.recording.searchHits[i].startTimeUTC
+									var r=2
+									var x__=new Date(1000*x_)
+									var x_d=x__.getDate()
+									var x_m=x__.getMonth()+1
+									var x_y=x__.getYear()
+									var x_h=x__.getHours()
+									var x_m_=x__.getMinutes()
+									var x=getWeekday(x_y,x_m,x_d)+' '
+									if (x_d<10) x+='0';
+									x+=x_d+'.'
+									if (x_m<10) x+='0';
+									x+=x_m+'.'+x_y+' '
+									if (x_h<10) x+='0';
+									x+=x_h+':'
+									if (x_m_<10) x+='0';
+									x+=x_m_
+									var v=''
+									if(!v_)
+									{
+										v="{oletus}"
+									}
+									else
+									{
+										for(j=0;j<B.folders.length;j++)
+										{
+											if(B.folders[j].id==v_)
+											{
+												v=B.folders[j].name
+												break
+											}
+											for(j_=0;j_<B.folders[j].folders.length;j_++)
+											{
+												if(B.folders[j].folders[j_].id==v_)
+												{
+													v=B.folders[j].folders[j_].name
+													break
+												}
+
+												for(j__=0;j__<B.folders[j].folders[j_].folders.length;j__++)
+												{
+													if(B.folders[j].folders[j_].folders[j__].id==v_)
+													{
+														v=B.folders[j].folders[j_].folders[j__].name
+														break
+													}
+												}
+											}
+										}
+									}
+									p+='<tr class="program-row" id="program'+u+'row" pid="program'+s+'pid">'
+									if( SETTINGS_checkbox_left == 1 )
+										p+='<td><input type="checkbox" id="program'+u+'check" pid="program'+s+'check" onClick="toggleMassButtons(id, pid);" class="checkbox"></td>'
+									p+='<td>'
+									p+='<div style="position:relative">'
+									p+='<span id="program'+u+'details" style="position:relative; TOP:0px; LEFT:34px;" onClick="showDetails(id);" onmouseover="tipsDetails(id)"; title="FOO"; class="link">'+q+"</span>"
+									p+='<span id="program'+u+'play" onClick="loadMPC(id, false);" class="link"><img src="images/play.png" style="position:absolute; TOP:-2px; LEFT:-2;"></span>'
+									if( SETTINGS_child_mode != 1 )
+									{
+										var posi2 = pos_in_array( u, downloaded_record_ids );
+										if( posi2 == -1 )
+											p+='<span onClick="download('+u+');" class="link"><img id="dl_'+u+'_img" src="images/icon-download.jpg" style="position:absolute; TOP:-2px; LEFT:15;"></span>'
+										else
+											p+='<span onClick="download('+u+');" class="link"><img id="dl_'+u+'_img" src="images/icon-downloaded.jpg" style="position:absolute; TOP:-2px; LEFT:15;"></span>'
+									}
+									p+='</div></td>'
+									p+="<td>"+z+"</td>"
+										<!-- p+="<td>"+start_time_to_text(x)+"</td>" -->
+									p+="<td>"+x+"</td>"
+									p+='<td id="viewcount'+u+'">'+getViewCountString(r,u)+' haku </td>'
+									p+="<td>"+v+"</td>"
+									p+="<td>"
+									p+='<span id="program'+u+'move" pid="program'+s+'move" onClick="moveProgram(pid);" class="link">Siirr‰</span>&nbsp;&nbsp;&nbsp;'
+									if( v_ == trash_bin_folder_id )
+										p+='<span id="program'+u+'delete" pid="program'+s+'delete" onClick="deleteProgram(id, pid);" class="link">Poista</span>&nbsp;&nbsp;&nbsp;'
+									else
+										p+='<span id="program'+u+'move" pid="program'+s+'move" onClick="moveProgramToTrashBin(id, id);" class="link">Poista</span>&nbsp;&nbsp;&nbsp;'
+									p+="</td>"
+									if( SETTINGS_checkbox_left != 1 )
+										p+='<td><input type="checkbox" id="program'+u+'check" pid="program'+s+'check" onClick="toggleMassButtons(id, pid);" class="checkbox"></td>'
+									p+="</tr>"
+									if(i==t-1)
+									{
+										stopLoading()
+										$("status").setHTML("OK, haku suoritettu")}}
+								if(t!=0)
+								{
+									p+="</tbody>"
+									p+="</table>"
+								}
+								if(t==0)
+								{
+									$("status").setHTML("OK, haku suoritettu")
+									p+="Annetulla hakusanalla ei lˆytynyt tallenteita"
+								}
+								y.innerHTML=p
+								if(t!=0)
+								{
+									checkSortingOrder()
+									myTable=new sortableTable("myTable",{ sortOn:checkSortingColumn(),sortBy:sortBy })
+								}
+							}
+						}).setHeader("Authorization","Bearer "+bearer).send()
+
+					}
+				}).setHeader("Authorization","Bearer "+bearer).send()
+			}
+			$("status").setHTML('<span id="status">Haetaan tallenteita, odota<span id="loading"></span></span>')
+			showIndicator()
+
+			setTimeout(m,500)
+		}
+	}
+	)
+}
+//------------------------------------------------------------------------------
+var loadSystem=function()
+{
+	$("login-content").setStyle("display","none")
+	getDirectory("folder-root","")
+}
+//------------------------------------------------------------------------------
+var getRecordings=function()
+{
+	$("guide").removeClass("active")
+	$("settings").removeClass("active")
+	$("recordings").addClass("active")
+	$("guide-area").setStyle("display","none")
+	$("guide-data").innerHTML=""
+	getDirectory("folder-root","")
+}
+//------------------------------------------------------------------------------
+var getSingleChannelGuide=function(b)
+{
+	var c=$("dropdown-channels")
+	$("guide-data").innerHTML=""
+	var a=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/ajaxprograminfo.sl?showdate="+getToday()+"&"+hash(),{
+		method:"GET",onRequest:function(){
+			c.setProperty("disabled","disabled")
+			showLoadingGuide()
+		},onComplete:function(g){
+			stopLoading()
+			c.removeProperty("disabled")
+			var u="OK"
+			$("status").setHTML(u)
+			var z=""
+			var s=0
+			var f=0
+			var l=""
+			for(var k in g.channels){
+				if(g.channels.hasOwnProperty(k)){
+					for(var j in g.channels[k]){
+						if(g.channels[b].hasOwnProperty(j)){
+							if(g.channels[b][j].length==0){
+								z+='<div class="channelset-frame">'
+								z+="Kanavalle ei lˆytynyt ohjelmatietoja. Todenn‰kˆisin syy on, ett‰ kanavalla ei ole l‰hiaikoina l‰hetyst‰."
+								z+="</div>"}
+							for(i=0;i<g.channels[b][j].length;i++){
+								var q=g.channels[b][j][i].id
+								var A=g.channels[b][j][i].name
+								var t=g.channels[b][j][i].simple_start_time
+								var p=g.channels[b][j][i].start_time
+								var n=g.channels[b][j][i].short_text
+								var m=g.channels[b][j][i].recorded
+								var h=g.channels[b][j][i].is_wildcard
+
+
+								var v=p.substring(0,p.length-9)
+								var d=v.split(".")
+								if(v!=l)
+								{
+									s=0
+									f++
+								}
+								s++
+								if(s==1)
+								{
+									if(l!="")
+									{
+										z+="</div>"
+									}
+									if(l!=""&&f==1)
+									{
+										z+="</div>"
+									}
+									if(f==1)
+									{
+										z+='<div class="channelset-frame">'
+									}
+									z+='<div class="channel-div">'
+									if(l==""&&v==getToday())
+									{
+										z+="<b>T‰n‰‰n - "+getWeekday(d[2],d[1],d[0])+" "+v+"</b><br>"
+									}
+									else
+									{
+										z+="<b>"+getWeekday(d[2],d[1],d[0])+" "+v+"</b><br>"
+									}
+								}
+								var r=""
+								if(h=="true")
+								{
+									r="epg-rec-wildcard"
+								}
+								else
+								{
+									if(m=="true")
+									{
+										r="epg-rec"
+									}
+									else
+									{
+										r="epg-link"
+									}
+								}
+								z+=t+" "
+								z+='<span id="program'+q+'details" channel="'+j+'" start_time="'+p+'" name="'+A+'" short_text="'+n+'" recorded="'+m+'" is_wildcard="'+h+'" title="'+decodingFilter(n)+'" onClick="showDetailsEPG(id, channel, start_time, name, short_text, recorded, is_wildcard);" class="'+r+'">'+decodingFilter(A)+"</span><br>"
+								if(i==(g.channels[b][j].length-1))
+								{
+									z+="</div></div>"
+								}
+								l=p.substring(0,p.length-9)
+								if(f==4)
+								{
+									f=0
+								}
+							}}}}}
+			$("guide-data").innerHTML+=z}
+	}).send()
+}
+//------------------------------------------------------------------------------
+var getGuide=function(){
+	$("recordings").removeClass("active")
+	$("settings").removeClass("active")
+	$("guide").addClass("active")
+	$("menu-area").setStyle("display","none")
+	$("data").innerHTML=""
+	$("guide-data").innerHTML=""
+	var a=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/ajaxprograminfo.sl?channels&"+hash(),{
+		method:"GET",onRequest:showLoadingGuide,onComplete:function(c){
+			stopLoading()
+			var b="OK"
+			$("status").setHTML(b)
+			$("guide-area").setStyle("display","block")
+			var h='<select class="select" id="dropdown-channels">'
+			h+='<option value="all">Kaikki kanavat</option>'
+			for(i=0;i<c.channels.length;i++)
+			{
+				var f=c.channels[i]
+				h+='<option value="'+i+'">'+f+"</option>"
+			}
+			h+="<option disabled>----------</option>"
+			h+='<option value="top">Suosituimmat ohjelmat</option>'
+			h+="</select>"
+			h+="&nbsp;&nbsp;&nbsp;"
+			h+='<span class="epg-rec no-link">Vihre‰</span> = kerran tallentuva ohjelma, '
+			h+='<span class="epg-rec-wildcard no-link">punainen</span> = aina tallentuva ohjelma'
+			$("guide-menu").innerHTML=h
+			var k=$("dropdown-channels")
+			try
+			{
+				var g=new ActiveXObject("Scripting.FileSystemObject")
+				var d=g.OpenTextFile(guideViewFile,1,false)
+				guideView=d.readline()
+				d.close()
+			}
+			catch(j){}
+			k.getElement("option[value="+guideView+"]").setProperty("selected","selected")
+			if(guideView=="all")
+			{
+				getGuideAll("","")
+			}
+			else
+			{
+				if(guideView=="top")
+				{
+					getGuideTop("")
+				}
+				else
+				{
+					getSingleChannelGuide(guideView)
+				}
+			}
+			k.addEvent("change",function()
+				{
+					allChannelsCurrentDay=""
+					if(k.value=="all")
+					{
+						getGuideAll("","")
+					}
+					else
+					{
+						if(k.value=="top")
+						{
+							getGuideTop("")
+						}
+						else
+						{
+							getSingleChannelGuide(k.value)
+						}
+					}
+				}
+			)
+		}
+	}).send()}
+//------------------------------------------------------------------------------
+var refreshGuide=function(b){
+	if(allChannelsCurrentDay!=""){
+		getGuideAll(allChannelsCurrentDay,b)
+		return}
+	if(topProgramsRefresh){
+		topProgramsRefresh=false
+		getGuideTop(b)
+		return}
+	var c=$("dropdown-channels")
+	$("guide-data").innerHTML=""
+	var a=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/ajaxprograminfo.sl?showdate="+getToday()+"&"+hash(),{
+		method:"GET",onRequest:function(){
+			c.setProperty("disabled","disabled")
+			if(b=="add"){
+				showRefreshGuide()}
+			if(b=="delete"){
+				showRefreshGuideDelete()}
+		},onComplete:function(g){
+			stopLoading()
+			c.removeProperty("disabled")
+			var u="OK"
+			$("status").setHTML(u)
+			var A=c.value
+			var z=""
+			var s=0
+			var f=0
+			var l=""
+			for(var k in g.channels){
+				if(g.channels.hasOwnProperty(k)){
+					for(var j in g.channels[k]){
+						if(g.channels[A].hasOwnProperty(j)){
+							if(g.channels[A][j].length==0){
+								z+='<div class="channelset-frame">'
+								z+="Kanavalle ei lˆytynyt ohjelmatietoja. Todenn‰kˆisin syy on, ett‰ kanavalla ei ole l‰hiaikoina l‰hetyst‰."
+								z+="</div>"}
+							for(i=0;i<g.channels[A][j].length;i++){
+								var q=g.channels[A][j][i].id
+								var B=g.channels[A][j][i].name
+								var t=g.channels[A][j][i].simple_start_time
+								var p=g.channels[A][j][i].start_time
+								var n=g.channels[A][j][i].short_text
+								var m=g.channels[A][j][i].recorded
+								var h=g.channels[A][j][i].is_wildcard
+								var v=p.substring(0,p.length-9)
+								var d=v.split(".")
+								if(v!=l){
+									s=0
+									f++}
+								s++
+								if(s==1){
+									if(l!=""){
+										z+="</div>"}
+									if(l!=""&&f==1){
+										z+="</div>"}
+									if(f==1){
+										z+='<div class="channelset-frame">'}
+									z+='<div class="channel-div">'
+									if(l==""&&v==getToday()){
+										z+="<b>T‰n‰‰n - "+getWeekday(d[2],d[1],d[0])+" "+v+"</b><br>"
+									}else{
+										z+="<b>"+getWeekday(d[2],d[1],d[0])+" "+v+"</b><br>"}}
+								var r=""
+								if(h=="true"){
+									r="epg-rec-wildcard"
+								}else{
+									if(m=="true"){
+										r="epg-rec"
+									}else{
+										r="epg-link"}}
+								z+=t+" "
+								z+='<span id="program'+q+'details" channel="'+j+'" start_time="'+p+'" name="'+B+'" short_text="'+n+'" recorded="'+m+'" is_wildcard="'+h+'" title="'+decodingFilter(n)+'" onClick="showDetailsEPG(id, channel, start_time, name, short_text, recorded, is_wildcard);" class="'+r+'">'+decodingFilter(B)+"</span><br>"
+								if(i==(g.channels[A][j].length-1)){
+									z+="</div></div>"}
+								l=p.substring(0,p.length-9)
+								if(f==4){
+									f=0}}}}}}
+			$("guide-data").innerHTML+=z}
+	}).send()}
+var getGuideAll=function(c,b){
+	var d=c
+	var f=$("dropdown-channels")
+	$("guide-data").innerHTML=""
+	var a=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/ajaxprograminfo.sl?showdate="+getToday()+"&"+hash(),{
+		method:"GET",onRequest:function(){
+			f.setProperty("disabled","disabled")
+			if(b==""){
+				showLoadingGuide()}
+			if(b=="add"){
+				showRefreshGuide()}
+			if(b=="delete"){
+				showRefreshGuideDelete()}
+		},onComplete:function(j){
+			stopLoading()
+			f.removeProperty("disabled")
+			var F="OK"
+			$("status").setHTML(F)
+			var I=""
+			var C=0
+			var h=0
+			var s=""
+			var n=""
+			var G=""
+			var q=new Array()
+			for(var r in j.channels){
+				if(j.channels.hasOwnProperty(r)){
+					for(var p in j.channels[r]){
+						if(j.channels[r].hasOwnProperty(p)){
+							for(i=0;i<j.channels[r][p].length;i++){
+								var A=j.channels[r][p][i].id
+								var K=j.channels[r][p][i].name
+								var E=j.channels[r][p][i].simple_start_time
+								var z=j.channels[r][p][i].start_time
+								var u=j.channels[r][p][i].short_text
+								var t=j.channels[r][p][i].recorded
+								var l=j.channels[r][p][i].is_wildcard
+								var H=z.substring(0,z.length-9)
+								var g=H.split(".")
+								var k=p
+								if(s!=H){
+									q.push(getWeekday(g[2],g[1],g[0])+" "+H)}
+								if(n==""){
+									n=H}
+								if(d!=""){
+									n=d}
+								if(n==H){
+									if(k!=G){
+										C=0
+										h++}
+									C++
+									if(C==1){
+										if(s!=""){
+											I+="</div>"}
+										if(s!=""&&h==1){
+											I+="</div>"}
+										if(h==1){
+											I+='<div class="channelset-frame">'}
+										I+='<div class="channel-div">'
+										I+="<b>"+p+"</b><br>"}
+									var B=""
+									if(l=="true"){
+										B="epg-rec-wildcard"}
+									else{
+										if(t=="true"){
+											B="epg-rec"
+										}else{
+											B="epg-link"}}
+									I+=E+" "
+									I+='<span id="program'+A+'details" channel="'+p+'" start_time="'+z+'" name="'+K+'" short_text="'+u+'" recorded="'+t+'" is_wildcard="'+l+'" title="'+decodingFilter(u)+'" onClick="showDetailsEPG(id, channel, start_time, name, short_text, recorded, is_wildcard);" class="'+B+'">'+decodingFilter(K)+"</span><br>"
+									if(i==(j.channels[r][p].length-1)){
+										I+="</div></div>"}
+									G=p
+									if(h==4){
+										h=0}}
+								s=z.substring(0,z.length-9)}}}}}
+			q=q.removeDuplicates()
+			var J='<br><div id="location">'
+			for(i=0;i<2;i++){
+				var m=q[i]
+				var v=q[i].substring(3)
+				var D="epg-navi-link"
+				if(d==v){
+					D=D+" active-link"}
+				if(i==0){
+					if(d==""){
+						D=D+" active-link"}
+					J+='<span weekday="'+v+'" onClick="getGuideAll2(weekday, \'\');" class="'+D+'">T‰n‰‰n - '+m+"</span>&nbsp;&nbsp;&nbsp;&nbsp;"
+				}else{
+					J+='<span weekday="'+v+'" onClick="getGuideAll2(weekday, \'\');" class="'+D+'">'+m+"</span>&nbsp;&nbsp;&nbsp;&nbsp;"}}
+			J+="</div>"
+			$("guide-data").innerHTML+=J+I
+			allChannelsCurrentDay=n}
+	}).send()}
+var getGuideAll2=function(c,b){
+	var d=c
+	var f=$("dropdown-channels")
+	$("guide-data").innerHTML=""
+	var a=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/ajaxprograminfo.sl?showdate="+d+"&"+hash(),{
+		method:"GET",onRequest:function(){
+			f.setProperty("disabled","disabled")
+			if(b==""){
+				showLoadingGuide()}
+			if(b=="add"){
+				showRefreshGuide()}
+			if(b=="delete"){
+				showRefreshGuideDelete()}
+		},onComplete:function(j){
+			stopLoading()
+			f.removeProperty("disabled")
+			var F="OK"
+			$("status").setHTML(F)
+			var I=""
+			var C=0
+			var h=0
+			var s=""
+			var n=""
+			var G=""
+			var q=new Array()
+			for(var r in j.channels){
+				if(j.channels.hasOwnProperty(r)){
+					for(var p in j.channels[r]){
+						if(j.channels[r].hasOwnProperty(p)){
+							for(i=0;i<j.channels[r][p].length;i++){
+								var A=j.channels[r][p][i].id
+								var K=j.channels[r][p][i].name
+								var E=j.channels[r][p][i].simple_start_time
+								var z=j.channels[r][p][i].start_time
+								var u=j.channels[r][p][i].short_text
+								var t=j.channels[r][p][i].recorded
+								var l=j.channels[r][p][i].is_wildcard
+								var H=z.substring(0,z.length-9)
+								var g=H.split(".")
+								var k=p
+								if(s!=H){
+									q.push(getWeekday(g[2],g[1],g[0])+" "+H)}
+								if(n==""){
+									n=H}
+								if(d!=""){
+									n=d}
+								if(n==H){
+									if(k!=G){
+										C=0
+										h++}
+									C++
+									if(C==1){
+										if(s!=""){
+											I+="</div>"}
+										if(s!=""&&h==1){
+											I+="</div>"}
+										if(h==1){
+											I+='<div class="channelset-frame">'}
+										I+='<div class="channel-div">'
+										I+="<b>"+p+"</b><br>"}
+									var B=""
+									if(l=="true"){
+										B="epg-rec-wildcard"}
+									else{
+										if(t=="true"){
+											B="epg-rec"
+										}else{
+											B="epg-link"}}
+									I+=E+" "
+									I+='<span id="program'+A+'details" channel="'+p+'" start_time="'+z+'" name="'+K+'" short_text="'+u+'" recorded="'+t+'" is_wildcard="'+l+'" title="'+decodingFilter(u)+'" onClick="showDetailsEPG(id, channel, start_time, name, short_text, recorded, is_wildcard);" class="'+B+'">'+decodingFilter(K)+"</span><br>"
+									if(i==(j.channels[r][p].length-1)){
+										I+="</div></div>"}
+									G=p
+									if(h==4){
+										h=0}}
+								s=z.substring(0,z.length-9)}}}}}
+			q=q.removeDuplicates()
+			var J='<br><div id="location">'
+			for(i=0;i<2;i++){
+				var m=q[i]
+				var v=q[i].substring(3)
+				var D="epg-navi-link"
+				if(d==v){
+					D=D+" active-link"}
+				if(i==0){
+					if(d==""){
+						D=D+" active-link"}
+					J+='<span weekday="'+v+'" onClick="getGuideAll2(weekday, \'\');" class="'+D+'">'+m+"</span>&nbsp;&nbsp;&nbsp;&nbsp;"
+				}else{
+					J+='<span weekday="'+v+'" onClick="getGuideAll2(weekday, \'\');" class="'+D+'">'+m+"</span>&nbsp;&nbsp;&nbsp;&nbsp;"}}
+			J+="</div>"
+			$("guide-data").innerHTML+=J+I
+			allChannelsCurrentDay=n}
+	}).send()}
+var getGuideTop=function(b){
+	var c=$("dropdown-channels")
+	$("guide-data").innerHTML=""
+	var a=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/channels.sl?ajax=true&"+hash(),{
+		method:"GET",onRequest:function(){
+			c.setProperty("disabled","disabled")
+			if(b==""){
+				showLoadingGuide()}
+			if(b=="add"){
+				showRefreshGuide()}
+			if(b=="delete"){
+				showRefreshGuideDelete()}
+		},onComplete:function(j){
+			stopLoading()
+			c.removeProperty("disabled")
+			var k="OK"
+			$("status").setHTML(k)
+			var h=""
+			h+='<div class="channelset-frame">'
+			h+="Suosituimmat ohjelmat, jotka myˆs muut Viihteen k‰ytt‰j‰t ovat laittaneet tallentumaan.<br><br>"
+			for(i=0;i<j.programs.length;i++){
+				var f=j.programs[i].program_id
+				var d=j.programs[i].name
+				var p=j.programs[i].channel
+				var n=j.programs[i].start_time
+				var q=j.programs[i].recordingid
+				var g=j.programs[i].is_wildcard
+				var m=n.substring(0,n.length-3)
+				var u=j.programs[i].download_desc
+				var l=""
+				if(g=="true"){
+					linkClass="epg-rec-wildcard"
+					l="true"
+				}else{
+					if(g=="false"){
+						linkClass="epg-rec"
+						l="true"
+					}else{
+						linkClass="epg-link"}}
+				if(i==0||i==13){
+					h+='<div class="channel-div-top">'
+					h+='<table cellspacing="0" cellpadding="0" id="myTableTop'+i+'" class="myTableTop">'
+					h+="<thead>"
+					h+='<th axis="number" class="no-sorting">#</th>'
+					h+='<th class="no-sorting">Ohjelma</th>'
+					h+='<th class="no-sorting">Kanava</th>'
+					h+='<th class="no-sorting">L‰hetysaika</th>'
+					h+="</thead>"
+					h+="<tbody>"}
+				h+="<tr>"
+				h+="<td>"+(i+1)+"</td>"
+				h+='<td width="330"><span id="program'+f+'details" channel="'+decodingFilter(p)+'" start_time="'+n+'" name="'+d+'" short_text="download_desc" recorded="'+l+'" is_wildcard="'+g+'" onmouseover="tipsDetails(id)"; title="FOO"; onClick="showDetailsEPG(id, channel, start_time, name, short_text, recorded, is_wildcard);" class="'+linkClass+'">'+decodingFilter(d)+"</span></td>"
+				h+='<td width="110">'+decodingFilter(p)+"</td>"
+				h+='<td width="100">'+m+"</td>"
+				h+="</tr>"
+				if(i==12||i==24){
+					h+="</tbody>"
+					h+="</table>"
+					h+="</div>"}}
+			h+="</div>"
+			$("guide-data").innerHTML+=h
+			myTable=new sortableTable("myTableTop0")
+			myTable=new sortableTable("myTableTop13")}
+	}).send()}
+//------------------------------------------------------------------------------
+var tipsDetails=function(b)
+{
+	var b=b.replace(/\D/g,"")
+	var tipId=document.getElementById("program"+b+"details")
+	if(! progDescArray[b])
+	{
+		var a=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/info/"+b+"?v=2.1&platform=online&appVersion=1.0&includeMetadata=true",{ method:"GET",onComplete:function(c){
+			if(!c.description)
+			{
+				c.description=CONST_record_has_no_desc
+			}
+			var shortTxt=c.description
+			tipId.title=shortTxt
+			progDescArray[b]=shortTxt
+		}
+		}).setHeader("Authorization","Bearer "+bearer).send()
+	}
+	else
+	{
+		tipId.title=progDescArray[b]
+	}
+}
+//------------------------------------------------------------------------------
+var xtipsDetails=function(b){
+	if(b==""){
+		showFreeText("OK.")
+		return}
+	var b=b.replace(/\D/g,"")
+	var a=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/info/"+b+"?v=2.1&platform=online&appVersion=1.0&includeMetadata=true",{
+		method:"GET",onRequest:showLoadingDetails,onComplete:function(c){
+			stopLoading()
+			if(!c.description){
+				c.description="<i>"+CONST_record_has_no_desc+"</i>"}
+			var shrtxt=c.description
+			shrtxt=shrtxt.substr(0,185)
+			showFreeText(shrtxt)}
+	}).setHeader("Authorization","Bearer "+bearer).send()}
+//------------------------------------------------------------------------------
+var showDetails=function(b){
+	var b=b.replace(/\D/g,"")
+	var a=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/info/"+b+"?v=2.1&platform=online&appVersion=1.0&includeMetadata=true",{
+		method:"GET",onRequest:showLoadingDetails,onComplete:function(c){
+			stopLoading()
+			$("status").setHTML("Tallenteen kuvauksen katseleminen")
+			showFreeText(decodingFilter(c.name))
+			$("program"+b+"row").addClass("active-row")
+			if(!c.description)
+			{
+				c.description="<i>"+CONST_record_has_no_desc+"</i>"
+			}
+			var h='<span class="link" id="close-modal"><img src="images/close.png"></span>'
+			h+="<h2>"+c.name+"</h2>"
+			var duration_h = parseInt(c.duration / 3600)
+			var duration_m = parseInt((c.duration - duration_h * 3600) / 60)
+			duration=''
+			if(duration_h==0)
+			{
+				duration = duration_m + ' min'
+			}
+			else
+			{
+				duration = duration_h + ' t ' + duration_m + ' min'
+			}
+			h+='<div class="program-specs">'+c.channelName+" "+c.startTime+", kesto "+duration+" ("
+			h+="programid: "+c.programId
+			h+=")<img src="+c.thumbnail+" align=right border=2></div>"
+			h+='<div class="program-desc">'+c.description+"</div>"
+			h+='<input type="submit" id="submit'+b+'play" url="'+
+				c.url+'" onClick="loadMPC(id, false);" class="button" value="Toista">'
+			if( SETTINGS_child_mode == 0 )
+			{
+				h+=' <input type="submit" id="submit'+b+'delete" url="'+
+					c.url+'" onClick="moveProgramToTrashBin(id, '+c.recordingId+');" class="button" value="Poista tallenne">'
+			}
+			var f=$("modal-bg")
+			var d=$("modal-box")
+			f.setStyle("display","block")
+			d.setStyle("display","block")
+			d.innerHTML='<div id="modal-box-top"></div>'
+			d.innerHTML+='<div id="modal-box-body">'+h+"</div>"
+			d.innerHTML+='<div id="modal-box-bottom"></div>'
+			var g=$("close-modal")
+			g.addEvent("click",function(j){
+				new Event(j).stop()
+				f.setStyle("display","none")
+				d.setStyle("display","none")
+				$("program"+b+"row").removeClass("active-row")
+				$("status").setHTML("OK")
+			})
+			var gg=$("modal-box")
+			gg.addEvent("keydown",function(jj){
+				var m=27
+				if(jj.keyCode==m){
+					new Event(jj).stop()
+					g.click()}
+			})
+			var ggg=$("data")
+			ggg.addEvent("keydown",function(jjj){
+				var m=27
+				if(jjj.keyCode==m){
+					new Event(jjj).stop()
+					g.click()}
+			})}
+	}).setHeader("Authorization","Bearer "+bearer).send()}
+//------------------------------------------------------------------------------
+var showDetailsEPG=function(p,u,n,v,r,m,c){
+	var p=p.replace(/\D/g,"")
+	var n=n.substring(0,n.length-3)
+	var j=decodingFilter(v)
+	var r=decodingFilter(r)
+	downloadDesc=false
+	if(r=="download_desc"){
+		downloadDesc=true}
+	$("status").setHTML("Ohjelman kuvauksen katseleminen")
+	if(!downloadDesc&&!r){
+		r="<i>"+CONST_record_has_no_desc+"</i>"}
+	var s='<span class="link" id="close-modal"><img src="images/close.png"></span>'
+	s+="<h2>"+j+"</h2>"
+	s+='<div class="program-specs">'+u+" "+n+" (programid: "+p+")</div>"
+	s+='<div class="program-desc" id="program-desc">'+r+"</div>"
+	s+='<div id="record-dropdown"></div>'
+	if(m=="true"&&c!="true"){
+		s+='<input type="submit" id="submit-delete-record" class="button" value="Poista tallennuspyyntˆ"> '}
+	if(m!="true"){
+		s+='<input type="submit" id="confirm-add-record" class="button" value="Tallenna"> '}
+	if(c=="true"){
+		s+='<input type="submit" id="submit-delete-wildcard" url="" class="button" value="Poista &quot;aina tallentuva&quot; -s‰‰ntˆ">'
+	}else{
+		s+='<input type="submit" id="confirm-add-wildcard" url="" class="button" value="Lis‰‰ aina tallentuvaksi">'}
+	var f=$("modal-bg")
+	var q=$("modal-box")
+	f.setStyle("display","block")
+	q.setStyle("display","block")
+	q.innerHTML='<div id="modal-box-top"></div>'
+	q.innerHTML+='<div id="modal-box-body">'+s+"</div>"
+	q.innerHTML+='<div id="modal-box-bottom"></div>'
+	if(downloadDesc){
+		var b=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/program.sl?programid="+p+"&ajax=true&"+hash(),{
+			method:"GET",onRequest:function(){
+				showLoadingDescEPG()
+			},onComplete:function(x){
+				stopLoading()
+				r=decodingFilter(x.short_text)
+				if(!r){
+					r="<i>"+CONST_record_has_no_desc+"</i>"}
+				$("program-desc").innerHTML=r}
+		}).send()}
+	var h=$("close-modal")
+	h.addEvent("click",function(x){
+		new Event(x).stop()
+		f.setStyle("display","none")
+		q.setStyle("display","none")
+		$("status").setHTML("OK")
+	})
+	var hh=$("modal-box")
+	hh.addEvent("keydown",function(jj){
+		var m=27
+		if(jj.keyCode==m){
+			new Event(jj).stop()
+			h.click()}
+	})
+	if(m=="true"&&c!="true"){
+		var g=$("submit-delete-record")
+		g.addEvent("click",function(y){
+			new Event(y).stop()
+			try{
+				f.setStyle("display","none")
+				q.setStyle("display","none")
+			}catch(y){}
+			var x=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/program.sl?programid="+p+"&ajax=true&"+hash(),{
+				method:"GET",onRequest:showLoadingDeleteRecord,onComplete:function(A){
+					var z=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/program.sl?remover="+A.recordingid+"&ajax=true&"+hash(),{
+						method:"GET",onComplete:function(B){
+							stopLoading()
+							$("program"+p+"details").setProperty("class","epg-link")
+							$("program"+p+"details").setProperty("recorded","false")
+							$("status").setHTML("OK, tallennuspyyntˆ poistettu")}
+					}).send()}
+			}).send()}
+		)}
+	if(c=="true"){
+		var d=$("submit-delete-wildcard")
+		d.addEvent("click",function(y){
+			new Event(y).stop()
+			try{
+				f.setStyle("display","none")
+				q.setStyle("display","none")
+			}catch(y){}
+			var x=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/program.sl?programid="+p+"&ajax=true&"+hash(),{
+				method:"GET",onRequest:showLoadingDeleteWildcard,onComplete:function(A){
+					var z=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/program.sl?remover="+A.recordingid+"&ajax=true&"+hash(),{
+						method:"GET",onComplete:function(B){
+							stopLoading()
+							if(downloadDesc){
+								topProgramsRefresh=true}
+							var C="delete"
+							refreshGuide(C)}
+					}).send()}
+			}).send()
+		})}
+	var l=""
+	var b=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/ready.sl?folderid=&ajax=true&"+hash(),{
+		method:"GET",onComplete:function(y){
+			var x='<div class="program-desc">';x+="<b>Tallenna kansioon:</b><br><br>";x+='<select class="select" id="dropdown-record">'
+			x+='<option value="">(oletus)</option>'
+			for(i=0;i<y.folders.length;i++){
+				var E=y.folders[i].id
+				var z=y.folders[i].name
+				var A=y.folders[i].size
+				x+='<option value="'+E+'">'
+				x+="&nbsp;&nbsp;"+decodingFilter(z)
+				x+="</option>"}
+			x+="</select>"
+			x+=' <select class="select" id="dropdown-record2">'
+			x+='<option value="none">'+l+"</option>"
+			x+="</select>"
+			x+=' <select class="select" id="dropdown-record3">'
+			x+='<option value="none">'+l+"</option>"
+			x+="</select>"
+			x+="<br><br>Kohdekansiovalikko tukee vain kolmen tason alikansiopuuta, joten syvemm‰ll‰ olevia alikansioita ei voi k‰ytt‰‰ t‰ll‰ sovelluksella."
+			x+="</div>"
+			x+='<div class="program-desc" id="wildcard-field">'
+			x+="<b>Avainsana, jonka perusteella tallennetaan:</b><br><br>"
+			x+='<input type="text" class="input-wildcard" id="wildcard">'
+			x+='<br><br>Voit k‰ytt‰‰ ohjelman nimess‰ *-merkki‰ jokerimerkkin‰, jos haluat tallentaa vain ohjelman nimen osalla. Esimerkiksi s‰‰ntˆ <b>el‰in*</b> tallentaa kaikki ohjelmat, jotka alkavat sanalla "el‰in", esim. El‰insairaala ja El‰inten tahdissa.'
+			x+="</div>"
+			$("record-dropdown").innerHTML=x
+			$("wildcard").setProperty("value",j)
+			var D=$("dropdown-record")
+			var C=$("dropdown-record2")
+			var B=$("dropdown-record3")
+			D.addEvent("change",function(){
+				var G=D.value
+				destination=G
+				if(G==""){
+					C.setHTML("")
+					var H=new Element("option",{value:"none"})
+					H.injectInside(C)
+					H.setHTML(l)
+					B.setHTML("")
+					var H=new Element("option",{value:"none"})
+					H.injectInside(B)
+					H.setHTML(l)}
+				if(G!=""){
+					var F=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/ready.sl?folderid="+G+"&ajax=true&"+hash(),{
+						method:"GET",onComplete:function(I){
+							C.setHTML("")
+							var L=new Element("option",{value:"none"})
+							L.injectInside(C)
+							L.setHTML(l)
+							for(i=0;i<I.folders.length;i++){
+								var M=I.folders[i].id
+								var J=I.folders[i].name
+								var K=I.folders[i].size
+								var L=new Element("option",{value:M})
+								L.injectInside(C)
+								L.setHTML(decodingFilter(J))}}}
+					).send()}}
+			)
+			C.addEvent("change",function(){
+				var G=D.value
+				var I=C.value
+				if(I!="none"){
+					destination=I}
+				if(I=="none"){
+					destination=G}
+				if(I=="none"){
+					B.setHTML("")
+					var H=new Element("option",{value:"none"})
+					H.injectInside(B)
+					H.setHTML(l)}
+				if(I!="none"){
+					var F=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/ready.sl?folderid="+I+"&ajax=true&"+hash(),{
+						method:"GET",onComplete:function(J){
+							B.setHTML("")
+							var M=new Element("option",{value:"none"})
+							M.injectInside(B)
+							M.setHTML(l)
+							for(i=0;i<J.folders.length;i++){
+								var N=J.folders[i].id
+								var K=J.folders[i].name
+								var L=J.folders[i].size
+								var M=new Element("option",{value:N})
+								M.injectInside(B)
+								M.setHTML(decodingFilter(K))}}
+					}).send()}
+			})
+			B.addEvent("change",function(){
+				var G=C.value
+				var F=B.value
+				if(F!="none"){
+					destination=F}
+				if(F=="none"){
+					destination=G}
+			})}
+	}).send()
+	if(m!="true"){
+		var k=$("confirm-add-record")
+		var a=$("confirm-add-wildcard")
+		var t=$("record-dropdown")
+		k.addEvent("click",function(y){
+			new Event(y).stop()
+			t.setStyle("display","block")
+			a.setStyle("display","none")
+			k.setProperty("id","submit-add-record")
+			var x=$("submit-add-record")
+			x.addEvent("click",function(A){
+				new Event(A).stop()
+				try{
+					f.setStyle("display","none")
+					q.setStyle("display","none")
+				}catch(A){}
+				var z=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/program.sl?programid="+p+"&record="+p+"&folderid="+destination+"&ajax=true&"+hash(),{
+					method:"GET",onRequest:showLoadingAddRecord,onComplete:function(C){
+						stopLoading()
+						var D=false
+						var E=C.split('"')
+						var B=E[3]
+						if(B=="TRUE"){
+							D=true}
+						if(D){
+							$("program"+p+"details").setProperty("class","epg-rec")
+							$("program"+p+"details").setProperty("recorded","true")
+							$("status").setHTML("OK, tallennuspyyntˆ lis‰tty")
+						}else{
+							$("status").setHTML("Tallennuspyynnˆn lis‰‰minen ep‰onnistui, todenn‰kˆisesti ohjelma on jo p‰‰ttynyt")}
+						destination=""}
+				}).send()
+			})
+		})
+		a.addEvent("click",function(y){
+			new Event(y).stop()
+			t.setStyle("display","block")
+			k.setStyle("display","none")
+			a.setProperty("id","submit-add-wildcard")
+			$("wildcard-field").setStyle("display","block")
+			var x=$("submit-add-wildcard")
+			x.addEvent("click",function(B){
+				new Event(B).stop()
+				var z=$("wildcard").value
+				try{
+					f.setStyle("display","none")
+					q.setStyle("display","none")
+				}catch(B){}
+				var A=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/wildcards.sl?channel="+encodingFilter(u)+"&folderid="+destination+"&wildcard="+encodingFilter(z)+"&record=true&ajax=true&"+hash(),{
+					method:"GET",onRequest:showLoadingAddRecord,onComplete:function(D){
+						stopLoading()
+						var E=false
+						var F=D.split('"')
+						var C=F[3]
+						if(C=="TRUE"){
+							E=true}
+						if(E){
+							if(downloadDesc){
+								topProgramsRefresh=true}
+							var G="add"
+							refreshGuide(G)
+						}else{
+							$("status").setHTML("Tallennuspyynnˆn lis‰‰minen ep‰onnistui, todenn‰kˆisesti ohjelman nimess‰ on erikoismerkkej‰ (korvaa ne *-merkill‰)")}}
+				}).send()
+			})
+		})}
+	if(m=="true"&&c!="true"){
+		var a=$("confirm-add-wildcard")
+		var g=$("submit-delete-record")
+		var t=$("record-dropdown")
+		a.addEvent("click",function(y){
+			new Event(y).stop()
+			t.setStyle("display","block")
+			g.setStyle("display","none")
+			a.setProperty("id","submit-add-wildcard")
+			$("wildcard-field").setStyle("display","block")
+			var x=$("submit-add-wildcard")
+			x.addEvent("click",function(B){
+				new Event(B).stop()
+				var A=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/program.sl?programid="+p+"&ajax=true&"+hash(),{
+					method:"GET",onRequest:showLoadingAddRecord,onComplete:function(D){
+						var C=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/program.sl?remover="+D.recordingid+"&ajax=true&"+hash(),{
+							method:"GET"
+						}).send()}
+				}).send()
+				var z=$("wildcard").value
+				try{
+					f.setStyle("display","none")
+					q.setStyle("display","none")
+				}catch(B){}
+				var A=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/wildcards.sl?channel="+encodingFilter(u)+"&folderid="+destination+"&wildcard="+encodingFilter(z)+"&record=true&ajax=true&"+hash(),{
+					method:"GET",onComplete:function(D){
+						stopLoading()
+						var E=false
+						var F=D.split('"')
+						var C=F[3]
+						if(C=="TRUE"){
+							E=true}
+						if(E){
+							var G="add"
+							refreshGuide(G)
+						}else{
+							$("status").setHTML("Tallennuspyynnˆn lis‰‰minen ep‰onnistui, todenn‰kˆisesti ohjelman nimess‰ on erikoismerkkej‰ (korvaa ne *-merkill‰)")}}
+				}).send()
+			})
+		})}}
+//------------------------------------------------------------------------------
+/*
+Settings:                                Default       Values
+row 0    SETTINGS_child_mode             0             0 or 1
+row 1    SETTINGS_child_pin_value        0000          0000 ... 9999
+row 2    SETTINGS_child_folders          (empty)       id1,id2,od3,...
+row 3    SETTINGS_window_x               -1            -1=not set, 0 ...
+row 4    SETTINGS_window_y               -1            -1=not set, 0 ...
+row 5    SETTINGS_download_path          c:\           string
+row 6    SETTINGS_external_subtitles     0             0 or 1
+row 7    SETTINGS_VLC_subtitles_language 'fin'         'fin', ...
+row 8    SETTINGS_save_description       0             0 or 1
+row 9    SETTINGS_duplicate_pre_sorting  'ASC'         'ASC' or 'DESC'
+row 10   SETTINGS_trash_bin_name         '{roskakori}' '{roskakori}' or 'eviihde.trash'
+row 11   SETTINGS_trash_bin_position     0             0 or 1
+row 12   SETTINGS_player                 'mpc-hc'      'mpc-hc', ...
+row 13   SETTINGS_downloader	         'streamlink'  'streamlink', ...
+row 14   SETTINGS_checkbox_left          0             0 or 1
+*/
+var saveSettings=function()
+{
+	try
+	{
+		var v=new ActiveXObject("Scripting.FileSystemObject")
+		var t=v.CreateTextFile(settingsFile,true)
+		t.writeline( SETTINGS_child_mode );
+		t.writeline( SETTINGS_child_pin_value );
+		t.writeline( SETTINGS_child_folders.join() );
+		t.writeline( SETTINGS_window_x );
+		t.writeline( SETTINGS_window_y );
+		t.writeline( SETTINGS_download_path );
+		t.writeline( SETTINGS_external_subtitles );
+		t.writeline( SETTINGS_VLC_subtitles_language );
+		t.writeline( SETTINGS_save_description );
+		t.writeline( SETTINGS_duplicate_pre_sorting );
+		t.writeline( SETTINGS_trash_bin_name );
+		t.writeline( SETTINGS_trash_bin_position );
+		t.writeline( SETTINGS_player );
+		t.writeline( SETTINGS_downloader );
+		t.writeline( SETTINGS_checkbox_left );
+		t.close()
+	}
+	catch(err)
+	{
+		error_msg( 0, 'saveSettings', err );
+	}
+}
+
+
+var loadSettings=function()
+{
+	try
+	{
+		var fso=new ActiveXObject("Scripting.FileSystemObject");
+		var file=fso.OpenTextFile(settingsFile,1,false);
+	}
+	catch(err)
+	{
+		error_msg( err_id_file_not_found, 'loadSettings 1 ', err );
+	}
+
+	if( file )
+	{
+		try
+		{
+			var s_child_mode=file.readline();
+			var s_child_pin=file.readline();
+			var s_child_folders=file.readline();
+			var s_window_x=file.readline();
+			var s_window_y=file.readline();
+			var s_download_path=file.readline();
+			var s_external_subtitles=file.readline();
+			var s_VLC_subtitles_language=file.readline();
+			var s_save_description=file.readline();
+			var s_duplicate_pre_sorting=file.readline();
+			var s_trash_bin_name=file.readline();
+			var s_trash_bin_position=file.readline();
+			var s_player=file.readline();
+			var s_downloader=file.readline();
+			var s_checkbox_left=file.readline();
+			file.close();
+		}
+		catch(err)
+		{
+			error_msg( err_id_input_past_end_of_file, 'loadSettings 2 ', err );
+		}
+	}
+	if( s_child_mode == undefined )
+		SETTINGS_child_mode = 0;
+	else
+		SETTINGS_child_mode = (s_child_mode == 0) ? 0 : 1;
+
+	if( s_child_pin == undefined )
+		SETTINGS_child_pin_value = default_pin_code;
+	else
+		SETTINGS_child_pin_value = s_child_pin.substr(0,4);
+
+	if( s_child_folders == undefined )
+		SETTINGS_child_folders = [];
+	else
+		SETTINGS_child_folders = s_child_folders.split(',');
+
+	if( s_window_x == undefined || s_window_x == '' )
+		SETTINGS_window_x = -1;
+	else
+		SETTINGS_window_x = s_window_x;
+
+	if( s_window_y == undefined || s_window_y == '' )
+		SETTINGS_window_y = -1;
+	else
+		SETTINGS_window_y = s_window_y;
+
+	if( s_download_path == undefined )
+		SETTINGS_download_path = 'c:\\';
+	else
+		SETTINGS_download_path = s_download_path;
+
+	if( s_external_subtitles == undefined )
+		SETTINGS_external_subtitles = 1;
+	else
+		SETTINGS_external_subtitles = (s_external_subtitles == 0) ? 0 : 1;
+
+	if( s_VLC_subtitles_language == undefined )
+		SETTINGS_VLC_subtitles_language = 'fin';
+	else
+		SETTINGS_VLC_subtitles_language = s_VLC_subtitles_language;
+
+	if( s_save_description == undefined )
+		SETTINGS_save_description = 0;
+	else
+		SETTINGS_save_description = (s_save_description == 0) ? 0 : 1;
+
+	if( s_duplicate_pre_sorting == undefined )
+		SETTINGS_duplicate_pre_sorting = 'ASC';
+	else
+		SETTINGS_duplicate_pre_sorting = (s_duplicate_pre_sorting == 'ASC') ? 'ASC' : 'DESC';
+
+	SETTINGS_trash_bin_name = null;
+	if( s_trash_bin_name != undefined )
+		SETTINGS_trash_bin_name = (s_trash_bin_name == trash_bin_names[1]) ? trash_bin_names[1] : trash_bin_names[0];
+
+	if( s_trash_bin_position == undefined )
+		SETTINGS_trash_bin_position = 0;
+	else
+		SETTINGS_trash_bin_position = (s_trash_bin_position == 0) ? 0 : 1;
+
+	if( s_player == undefined )
+		SETTINGS_player = 'vlc';
+	else
+		SETTINGS_player = s_player;
+
+	if( s_downloader == undefined )
+		SETTINGS_downloader = 'viihdex-dl';
+	else
+		SETTINGS_downloader = s_downloader;
+
+	if( s_checkbox_left == undefined )
+		SETTINGS_checkbox_left = 0;
+	else
+		SETTINGS_checkbox_left = (s_checkbox_left == 0) ? 0 : 1;
+
+	var file = null;
+	try
+	{
+		var fso=new ActiveXObject("Scripting.FileSystemObject");
+		file=fso.OpenTextFile(downloadedFile,1,false);
+	}
+	catch(err)
+	{
+		error_msg( err_id_file_not_found, 'loadSettings 3', err );
+	}
+	downloaded_record_ids = [];
+	if( file != null )
+	{
+		try
+		{
+			var s_downloaded_record_ids=file.readline();
+			file.close();
+			downloaded_record_ids = s_downloaded_record_ids.split(',');
+		}
+		catch(err)
+		{
+			error_msg( err_id_input_past_end_of_file, 'loadSettings 4', err );
+		}
+	}
+}
+
+
+var childModeClicked=function()
+{
+	if( SETTINGS_child_mode == 0 )
+		showChildModeChangeDialog('Lapsitila p‰‰lle', 1);
+	else
+		showChildModeChangeDialog('Lapsitila pois p‰‰lt‰', 0);
+}
+
+
+var showChildModeChangeDialog=function(title, new_child_mode)
+{
+	var content="<h2>"+title+"</h2>"
+	content+='<div class="program-desc">'
+	content+="<b>Anna pin koodi</b><br><br>"
+	content+='<input id="child_pin" type="text" size="4" maxlength="4" onKeyPress="return isNumber(event);">'
+	content+=' <span id="child_pin_error" class="hide" style="color: #ffdddd;">v‰‰r‰ pin koodi</span><br><br>'
+	if( new_child_mode == 1 && SETTINGS_child_pin_value == default_pin_code ) content+='Voit vaihtaa PIN-koodin asetuksista (oletus koodi on '+default_pin_code+').';
+	content+="</div>"
+	content+='<input type="submit" id="submit-ok" class="button" value="Ok"> '
+	content+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
+	var l=$("modal-bg")
+	var k=$("modal-box")
+	k.innerHTML='<div id="modal-box-top"></div>'
+	k.innerHTML+='<div id="modal-box-body">'+content+"</div>"
+	k.innerHTML+='<div id="modal-box-bottom"></div>'
+	l.setStyle("display","block")
+	k.setStyle("display","block")
+	var btn_cancel=$("submit-cancel")
+	var btn_ok=$("submit-ok")
+
+	btn_cancel.addEvent("click",function(u){
+		new Event(u).stop()
+		try{
+			l.setStyle("display","none")
+			k.setStyle("display","none")
+		}catch(u){}
+	})
+
+	btn_ok.addEvent("click",function(u){
+		new Event(u).stop()
+		try{
+			if( $('child_pin').value == SETTINGS_child_pin_value )
+			{
+				l.setStyle("display","none")
+				k.setStyle("display","none")
+				childModeSet(new_child_mode);
+			}
+			else
+			{
+				$('child_pin').value = '';
+				$('child_pin_error').removeClass('hide');
+				$('child_pin').focus();
+			}
+		}catch(u){}
+	})
+
+
+	$('child_pin').focus();
+}
+
+
+var childModeSet=function(new_mode)
+{
+	if( new_mode == 0 )
+	{
+		$("childmode").setHTML( 'p‰‰lle' );
+		SETTINGS_child_mode = 0
+		getDirectory("folder-root","");
+		$("menu_content").removeClass("hide");
+		$("recordings").removeClass("hide");
+		$("guide").removeClass("hide");
+		$("settings").removeClass("hide");
+		saveSettings();
+	}
+	else
+	{
+		$("childmode").setHTML( 'pois' );
+		SETTINGS_child_mode = 1;
+		getDirectory("folder-root","");
+		$("menu_content").addClass("hide");
+		$("recordings").addClass("hide");
+		$("guide").addClass("hide");
+		$("settings").addClass("hide");
+		saveSettings();
+	}
+}
+
+
+var toggleChildFlag=function(id_str)
+{
+	var id = id_str.replace(/\D/g,"")
+	var index = pos_in_array( id, SETTINGS_child_folders );
+	if( index == -1 )
+	{
+		SETTINGS_child_folders.push(id);
+		$( id_str ).setHTML( child_on );
+	}
+	else
+	{
+		SETTINGS_child_folders.splice(index,1);
+		$( id_str ).setHTML( child_off );
+	}
+	saveSettings();
+}
+
+
+var pos_in_array=function( value, i_array )
+{
+	for( j=0; j<i_array.length; j++ )
+	{
+		if( i_array[j] == value ) return j;
+	}
+	return -1;
+}
+//------------------------------------------------------------------------------
+var showSettings=function(){
+	var a="recordings"
+	if($("recordings").hasClass("active")){
+		$("recordings").removeClass("active")
+		a="recordings"}
+	if($("guide").hasClass("active")){
+		$("guide").removeClass("active")
+		a="guide"}
+	$("settings").addClass("active")
+
+	var b=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders?v=2.1&platform=ios&appVersion=1.0",{
+		method:"GET",onRequest:showLoadingSettings,onComplete:function(d){
+
+			var f='<span class="link" id="close-modal"><img src="images/close.png"></span>'
+			f+="<h2>Asetukset</h2>"
+			f+='<div class="program-specs">Muokkaa asetuksia. Muutokset tallennetaan automaattisesti kun valikon valinta muuttuu.</div>'
+			f+='<div class="program-desc">'
+			f+="<b>Ikkunan koko</b><br>"
+			f+="Muuta Media Managerin ikkunan koko ja sijainti itsellesi sopivaksi.<br>"
+			f+='<select class="select" id="dropdown-resolution">'
+			if(width==0&&height==0){
+				f+='<option value="0x0" selected>Kokoruutu</option>'
+			}else{
+				f+='<option value="0x0">Kokoruutu</option>'}
+			if(width==1200&&height==800){
+				f+='<option value="1200x800" selected>1200 x 800</option>'
+			}else{
+				f+='<option value="1200x800">1200 x 800</option>'}
+			if(width==1200&&height==600){
+				f+='<option value="1200x600" selected>1200 x 600</option>'
+			}else{
+				f+='<option value="1200x600">1200 x 600</option>'}
+			if(width==1095&&height==800){
+				f+='<option value="1095x800" selected>1095 x 800</option>'
+			}else{
+				f+='<option value="1095x800">1095 x 800</option>'}
+			if(width==1095&&height==600){
+				f+='<option value="1095x600" selected>1095 x 600</option>'
+			}else{
+				f+='<option value="1095x600">1095 x 600</option>'}
+			if(customResolution){
+				f+='<option value="custom" selected>Mukautettu</option>'
+			}else{
+				f+='<option value="custom">Mukautettu</option>'}
+			f+="</select>"
+
+			var temp_x = '';
+			if( SETTINGS_window_x > -1 ) temp_x = SETTINGS_window_x;
+			f+=' &nbsp; <b>Sijainti:</b> x <input type="text" size="4" maxlength="4" id="setting-window-x" value="'+temp_x+'" onKeyPress="return isNumber(event);" onchange="winPosChanged();">'
+			var temp_y = '';
+			if( SETTINGS_window_y > -1 ) temp_y = SETTINGS_window_y;
+			f+=' &nbsp; y <input type="text" size="4" maxlength="4" id="setting-window-y" value="'+temp_y+'" onKeyPress="return isNumber(event);" onchange="winPosChanged();">'
+
+			f+=' &nbsp; <input id="win_pos_btn" type="button" value="Nykyinen sijainti" class="button">';
+
+			f+="<br><br>"
+			f+='<div class="hide" id="custom-resolution">'
+			f+='<input type="text" class="input-resolution" id="custom-width" onKeyPress="return isNumber(event);" value="'+width+'">'
+			f+=" X "
+			f+='<input type="text" class="input-resolution" id="custom-height" onKeyPress="return isNumber(event);" value="'+height+'">'
+			f+=' <input type="submit" id="submit-resolution" class="button" value="Tallenna">'
+			f+="<br><br>"
+			f+="</div>"
+			f+="<b>Valintaruutujen sijainti</b><br>"
+			f+='<div style="float: left;">'
+			f+='<input id="checkbox-left" type="checkbox"'
+			if( SETTINGS_checkbox_left == 1 ) f+= ' checked';
+			f+='>Sijoita valintaruudut vasemmalle<br>'
+			f+='</div>'
+
+
+			var p="OK"
+			$("status").setHTML(p)
+
+			f+='<br><div style="float: right;">'
+			f+="<br><b>Lataaja</b><br>";
+			var downloader_values = [ "viihdex-dl", "viihdex-dl_py", "curl (.m3u8)" ];
+			var downloader_texts =  [ "ViihdeX-dl (.exe)", "ViihdeX-dl (.py)", "curl (.m3u8)" ];
+			f+='<select class="select" id="dropdown-downloader-list">'
+			for( i=0; i<downloader_values.length; i++ )
+			{
+				if( downloader_values[i] == SETTINGS_downloader )
+					f+='<option value="'+downloader_values[i]+'" selected>'+downloader_texts[i]+'</option>'
+				else
+					f+='<option value="'+downloader_values[i]+'">'+downloader_texts[i]+'</option>'
+			}
+			f+="</select><br>"
+			f+='</div>'
+
+			var player_values = [ "vlc", "mpc-hc" ];
+			var player_texts =  [ "VLC", "MPC-HC" ];
+			f+="<br><b>Videosoitin</b><br>";
+			f+='<select class="select" id="dropdown-player-list">'
+			for( i=0; i<player_values.length; i++ )
+			{
+				if( player_values[i] == SETTINGS_player )
+					f+='<option value="'+player_values[i]+'" selected>'+player_texts[i]+'</option>'
+				else
+					f+='<option value="'+player_values[i]+'">'+player_texts[i]+'</option>'
+			}
+			f+="</select>"
+			f+="<br><br>VLC:n tekstityskieli<br>";
+			var sub_language_values = [ "off",         "fin",	"dut" ];
+			var sub_language_texts =  [ "Pois p‰‰lt‰", "suomi",	"hollanti" ];
+			f+='<select class="select" id="dropdown-subtitles-list">'
+			for( i=0; i<sub_language_values.length; i++ )
+			{
+				if( sub_language_values[i] == SETTINGS_VLC_subtitles_language )
+					f+='<option value="'+sub_language_values[i]+'" selected>'+sub_language_texts[i]+'</option>'
+				else
+					f+='<option value="'+sub_language_values[i]+'">'+sub_language_texts[i]+'</option>'
+			}
+			f+="</select>"
+
+			f+="<br><br><b>Latausasetukset</b><br>"
+
+			f+='<input id="external-subtitles" type="checkbox"'
+			if( SETTINGS_external_subtitles == 1 ) f+= ' checked';
+			f+='>Lataa tekstitykset erillisiin srt-tiedostoihin<br>'
+			var sub_language = 'fin';
+			f+='<input id="save-description" type="checkbox"'
+			if( SETTINGS_save_description == 1 ) f+= ' checked';
+			f+='>Tallenna ladattavan tallenteen kuvaus tekstitiedostoon<br>'
+			f+='<div>'
+			f+="<br><b>Kaksoiskappaleiden haku</b><br>"
+			f+="J‰rjestys:<br>";
+			var dup_sort_order_values = [ "ASC",         "DESC"   ];
+			var dup_sort_order_texts =  [ "Vanhempi alkuper‰iseksi", "Uudempi alkuper‰iseksi" ];
+			f+='<select class="select" id="dropdown-dup-sort-order-list">'
+			for( i=0; i<dup_sort_order_values.length; i++ )
+			{
+				if( dup_sort_order_values[i] == SETTINGS_duplicate_pre_sorting )
+					f+='<option value="'+dup_sort_order_values[i]+'" selected>'+dup_sort_order_texts[i]+'</option>'
+				else
+					f+='<option value="'+dup_sort_order_values[i]+'">'+dup_sort_order_texts[i]+'</option>'
+			}
+			f+="</select>"
+
+
+			f+="<br><br><b>Roskakori</b><br>"
+			f+='<div style="float: right;">';
+			f+="Sijainti:<br>";
+			f+='<select class="select" id="dropdown-trash-bin-pos-list">'
+			if( SETTINGS_trash_bin_position == 0 )
+				f+='<option value="0" selected>Kansioiden joukossa</option>'
+			else
+				f+='<option value="0">Kansioiden joukossa</option>'
+			if( SETTINGS_trash_bin_position == 1 )
+				f+='<option value="1" selected>Viimeisen‰</option>'
+			else
+				f+='<option value="1">Viimeisen‰</option>'
+			f+="</select>"
+			f+="</div>";
+
+			f+="Nimi:<br>";
+			f+='<select class="select" id="dropdown-trash-bin-name-list">'
+			for( i=0; i<trash_bin_names.length; i++ )
+			{
+				if( trash_bin_names[i] == SETTINGS_trash_bin_name )
+					f+='<option value="'+trash_bin_names[i]+'" selected>'+trash_bin_names[i]+'</option>'
+				else
+					f+='<option value="'+trash_bin_names[i]+'">'+trash_bin_names[i]+'</option>'
+			}
+			f+="</select>"
+
+
+
+			f+="<br><br><b>Lapsitila</b><br>"
+			f+="Pin-koodi<br>";
+			f+='<input id="child_pin_code" type="text" size="4" maxlength="4" onKeyPress="return isNumber(event);"> &nbsp;';
+			f+=' <input id="child_pin_code_btn" type="button" value="Vaihda" class="button">';
+			f+=' &nbsp;&nbsp; <span id="child_pin_code_error" style="color: #ffdddd;"></span>'
+			f+="</div>"
+			var k=$("modal-bg")
+			var j=$("modal-box")
+			j.setStyle("top","20%")
+			k.setStyle("display","block")
+			j.setStyle("display","block")
+			j.innerHTML='<div id="modal-box-top"></div>'
+			j.innerHTML+='<div id="modal-box-body">'+f+"</div>"
+			j.innerHTML+='<div id="modal-box-bottom"></div>'
+			var q=$("close-modal")
+			q.addEvent("click",function(t){
+				new Event(t).stop()
+				k.setStyle("display","none")
+				j.setStyle("display","none")
+				$("settings").removeClass("active")
+				$(a).addClass("active")
+				$("status").setHTML("OK")
+				$("modal-box").setStyle("top","50%");
+			})
+			if(customResolution){
+				$("custom-resolution").removeClass("hide")}
+			var h=$("dropdown-resolution")
+			var g=$("dropdown-channel-list")
+			var VLC_subtitles=$("dropdown-subtitles-list")
+			var player_=$("dropdown-player-list")
+			var downloader_=$("dropdown-downloader-list")
+			VLC_subtitles.addEvent("change", function(){ SETTINGS_VLC_subtitles_language = $("dropdown-subtitles-list").value; saveSettings(); } );
+			player_.addEvent("change", function(){ SETTINGS_player = $("dropdown-player-list").value; saveSettings(); } );
+			downloader_.addEvent("change", function(){ SETTINGS_downloader = $("dropdown-downloader-list").value; saveSettings(); } );
+
+
+			var dup_order_list=$("dropdown-dup-sort-order-list")
+			dup_order_list.addEvent("change", function(){ SETTINGS_duplicate_pre_sorting = $("dropdown-dup-sort-order-list").value; saveSettings(); } );
+
+			var trash_bin_name_list=$("dropdown-trash-bin-name-list")
+			trash_bin_name_list.addEvent("change", function()
+				{
+					SETTINGS_trash_bin_name = $("dropdown-trash-bin-name-list").value;
+					saveSettings();
+					trash_bin_folder_id = -1;
+					getDirectory("folder-root","");
+				} );
+
+			var trash_bin_pos_list=$("dropdown-trash-bin-pos-list")
+			trash_bin_pos_list.addEvent("change", function()
+				{
+					SETTINGS_trash_bin_position = $("dropdown-trash-bin-pos-list").value;
+					saveSettings();
+					if( foldernameCurrent == '' ) getDirectory("folder-root","");
+				} );
+
+			h.addEvent("change",function(){
+				var u=h.value
+				if(u!="custom"){
+					customResolution=false
+					$("custom-resolution").addClass("hide")
+					u=u.split("x")
+					width=u[0]
+					height=u[1]
+					resizeWindow(width,height)
+					var v=new ActiveXObject("Scripting.FileSystemObject")
+					var t=v.CreateTextFile(resolutionFile,true)
+					t.writeline(width+"\r\n"+height+"\r\n")
+					t.close()
+				}else{
+					customResolution=true
+					$("custom-resolution").removeClass("hide")}
+			})
+			$("submit-resolution").addEvent("click",function(){
+				width=$("custom-width").value
+				height=$("custom-height").value
+				resizeWindow(width,height)
+				var u=new ActiveXObject("Scripting.FileSystemObject")
+				var t=u.CreateTextFile(resolutionFile,true)
+				t.writeline(width+"\r\n"+height+"\r\ncustom\r\n")
+				t.close()
+			})
+
+
+			var external_subtitles_cb=$('external-subtitles');
+			external_subtitles_cb.addEvent("click",function(u){
+				//new Event(u).stop()
+				if( $('external-subtitles').getProperty("checked") )
+					SETTINGS_external_subtitles = 1;
+				else
+					SETTINGS_external_subtitles = 0;
+				saveSettings();
+			});
+
+			var save_description_cb=$('save-description');
+			save_description_cb.addEvent("click",function(u){
+				//new Event(u).stop()
+				if( $('save-description').getProperty("checked") )
+					SETTINGS_save_description = 1;
+				else
+					SETTINGS_save_description = 0;
+				saveSettings();
+			});
+
+			var checkbox_left_cb=$('checkbox-left');
+			checkbox_left_cb.addEvent("click",function(u){
+				//new Event(u).stop()
+				if( $('checkbox-left').getProperty("checked") )
+					SETTINGS_checkbox_left = 1;
+				else
+					SETTINGS_checkbox_left = 0;
+				saveSettings();
+			});
+
+			var win_pos_btn=$("win_pos_btn")
+			win_pos_btn.addEvent("click",function(u){
+				new Event(u).stop()
+				$('setting-window-x').value = window.screenLeft - 4;
+				$('setting-window-y').value = window.screenTop - 30;
+				winPosChanged();
+			});
+			var child_pin_code_btn=$("child_pin_code_btn")
+			child_pin_code_btn.addEvent("click",function(u){
+				new Event(u).stop()
+				try{
+					$('child_pin_code_error').setHTML('');
+					var v = leaveOnlyNumbers( $('child_pin_code').value );
+					if( v.length != 4 )
+					{
+						$('child_pin_code_error').setHTML('Pin-koodin tulee olla nelj‰ numeroa');
+						$('child_pin_code').value = '';
+					}
+					else
+					{
+						$('child_pin_code').value = '';
+						$('child_pin_code_error').setHTML('vaihdettu');
+						SETTINGS_child_pin_value = v;
+						saveSettings();
+					}
+				}catch(u){}
+			})
+		}
+	}).setHeader("Authorization","Bearer "+bearer).send()}
+
+
+var deleteProgram=function(h,g)
+{
+	$("status").setHTML("Tallenteen poistaminen")
+	var h=h.replace(/\D/g,"")
+	if( typeof g == "string" ) var g=g.replace(/\D/g,"")
+	$("program"+h+"row").addClass("active-row")
+	var d="<h2>Tallenteen poistaminen</h2>"
+	d+='<div class="program-desc">'
+	d+='<img src="images/icon-important.png" style="float: left; margin-right: 20px;">';
+	d+='<br>Haluatko varmasti poistaa tallenteen?<br>Poistamisen j‰lkeen tallennetta ei ole en‰‰ mahdollista palauttaa.</div>'
+	d+='<input type="submit" id="submit-delete" class="button" value="Poista"> '
+	d+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
+	var b=$("modal-bg")
+	var a=$("modal-box")
+	b.setStyle("display","block")
+	a.setStyle("display","block")
+	a.innerHTML='<div id="modal-box-top"></div>'
+	a.innerHTML+='<div id="modal-box-body">'+d+"</div>"
+	a.innerHTML+='<div id="modal-box-bottom"></div>'
+	var c=$("submit-cancel")
+	var f=$("submit-delete")
+	c.addEvent("click",function(j)
+		{
+			new Event(j).stop()
+			b.setStyle("display","none")
+			a.setStyle("display","none")
+			$("program"+h+"row").removeClass("active-row")
+			$("status").setHTML("OK")
+		})
+	f.addEvent("click",function(k)
+		{
+			new Event(k).stop()
+			b.setStyle("display","none")
+			a.setStyle("display","none")
+			var j=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/id/"+g+"?v=2&platform=ios&appVersion=1.0",{
+				method:"DELETE",onRequest:showLoadingDelete,onComplete:function(l){
+					stopLoading()
+					$("program"+h+"row").addClass("removed-row")
+					$("program"+h+"row").addClass("hide")
+					$("program"+h+"row").remove()
+					$("status").setHTML("OK, tallenne poistettu")}
+			}).setHeader("Content-Type","application/x-www-form-urlencoded").setHeader("Authorization","Bearer "+bearer).send("recordingId="+g)
+		})
+}
+//------------------------------------------------------------------------------
+var moveProgramToTrashBin=function(d,c){
+	if( use_trash_bin != "yes" || folderidCurrent == trash_bin_folder_id )
+	{
+		deleteProgram(d,c);
+		return;
+	}
+	var d=d.replace(/\D/g,"")
+	if( typeof c == "string" ) var c=c.replace(/\D/g,"")
+	$("program"+d+"row").addClass("active-row")
+	var a=""
+	var b=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders?v=2.1&platform=ios&appVersion=1.0",{
+		method:"GET",onRequest:showLoadingFolderList,onComplete:function(n){
+			stopLoading()
+			$("status").setHTML("Tallenteen poistaminen roskakoriin")
+			if( trash_bin_folder_id == -1 )
+			{
+				$("program"+d+"row").removeClass("active-row");
+				$("status").setHTML("OK")
+				alert('Ei roskakoria!\nKansiota "'+SETTINGS_trash_bin_name+'" ei lˆydy.');
+				return;
+			}
+			var j="<h2>Tallenteen poistaminen roskakoriin</h2>"
+			j+='<div class="program-desc">'
+			j+="<b>Haluatko varmasti poistaa tallenteen? Poistamisen j‰lkeen tallenteen lˆyt‰‰ roskakorista.</b><br><br>"
+			j+="</div>"
+			j+='<input type="submit" id="submit-move" class="button" value="Poista"> '
+			j+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
+			var l=$("modal-bg")
+			var k=$("modal-box")
+			k.innerHTML='<div id="modal-box-top"></div>'
+			k.innerHTML+='<div id="modal-box-body">'+j+"</div>"
+			k.innerHTML+='<div id="modal-box-bottom"></div>'
+			l.setStyle("display","block")
+			k.setStyle("display","block")
+			var btn_cancel=$("submit-cancel")
+			var btn_move=$("submit-move")
+			var q=""
+
+			btn_cancel.addEvent("click",function(u)
+				{
+					new Event(u).stop()
+					try
+					{
+						l.setStyle("display","none")
+						k.setStyle("display","none")
+						$("program"+d+"row").removeClass("active-row")
+					}
+					catch(u){}
+					$("status").setHTML("OK")
+				})
+
+			btn_move.addEvent("click",function(v)
+				{
+					new Event(v).stop()
+					try
+					{
+						l.setStyle("display","none")
+						k.setStyle("display","none")
+					}
+					catch(v){}
+					var u=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/move?v=2&platform=ios&appVersion=1.0",{
+						method:"PUT",onRequest:showLoadingMove,onComplete:function(x){
+							stopLoading()
+							$("program"+d+"row").addClass("removed-row")
+							$("program"+d+"row").addClass("hide")
+							$("program"+d+"row").remove()
+							$("status").setHTML("OK, tallenne poistettu roskakoriin")
+							var b=0
+							while(b<programIdArray.length)
+							{
+								if(programIdArray[b]==d)
+								{
+									programIdArray.splice(b,1)
+									programViewIdArray.splice(b,1)
+								}
+								else
+								{
+									b++
+								}
+							}
+							incTrashBinCounter();
+						}
+					}).setHeader("Content-Type","application/x-www-form-urlencoded").setHeader("Authorization","Bearer "+bearer).send("programId="+c+"&folderId="+trash_bin_folder_id)
+				})
+		}
+	}).setHeader("Authorization","Bearer "+bearer).send()}
+//------------------------------------------------------------------------------
+var moveProgram=function(c){
+	var c=c.replace(/\D/g,"")
+	$("program"+c+"row").addClass("active-row")
+	var a=""
+	var b=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders?v=2.1&platform=ios&appVersion=1.0",{
+		method:"GET",onRequest:showLoadingFolderList,onComplete:function(n){
+			stopLoading()
+			$("status").setHTML("Tallenteen siirt‰minen")
+			var j="<h2>Tallenteen siirt‰minen</h2>"
+			j+='<div class="program-desc">'
+			j+="<b>Siirr‰ kansioon:</b><br><br>"
+			j+='<select class="select" id="dropdown-move">'
+			j+='<option value="none">'+a+"</option>"
+			j+='<option value="0">(oletus)</option>'
+			var folder_number1_=0
+			var folder_number2_=0
+			for(i=0;i<n.folders.length;i++){
+				var s=n.folders[i].id
+				var h=n.folders[i].name
+				var t=n.folders[i].size
+				j+='<option value="'+s+'">'
+				j+="&nbsp;&nbsp;"+h
+				j+="</option>"}
+			j+="</select>"
+			j+=' <select class="select" id="dropdown-move2">'
+			j+='<option value="none">'+a+"</option>"
+			j+="</select>"
+			j+=' <select class="select" id="dropdown-move3">'
+			j+='<option value="none">'+a+"</option>"
+			j+="</select>"
+			j+="<br><br>Siirton‰kym‰ tukee vain kolmen tason alikansiopuuta, joten syvemm‰ll‰ olevia alikansioita ei voi k‰ytt‰‰ t‰ll‰ sovelluksella."
+			j+="</div>"
+			j+='<input type="submit" id="submit-move" class="button" value="Siirr‰" disabled> '
+			j+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
+			var l=$("modal-bg")
+			var k=$("modal-box")
+			k.innerHTML='<div id="modal-box-top"></div>'
+			k.innerHTML+='<div id="modal-box-body">'+j+"</div>"
+			k.innerHTML+='<div id="modal-box-bottom"></div>'
+			l.setStyle("display","block")
+			k.setStyle("display","block")
+			var p=$("submit-cancel")
+			var m=$("submit-move")
+			var r=$("dropdown-move")
+			var g=$("dropdown-move2")
+			var f=$("dropdown-move3")
+			var q=""
+			r.addEvent("change",function(){
+				var v=r.value
+				if(v=="none"){
+					m.setProperty("disabled","disabled")}
+				if(v!="none"){
+					m.removeProperty("disabled")
+					q=v}
+				if(v=="none"||v==""){
+					g.setHTML("")
+					var x=new Element("option",{value:"none"})
+					x.injectInside(g)
+					x.setHTML(a)
+					f.setHTML("")
+					var x=new Element("option",{value:"none"})
+					x.injectInside(f)
+					x.setHTML(a)}
+				if(v!="none"&&v!=""){
+					g.setHTML("")
+					var B=new Element("option",{value:"none"})
+					B.injectInside(g)
+					B.setHTML(a)
+					for(i=0;i<n.folders.length;i++) if(n.folders[i].id==v) folder_number1_=i;
+					for(i=0;i<n.folders[folder_number1_].folders.length;i++){
+						var C=n.folders[folder_number1_].folders[i].id
+						var z=n.folders[folder_number1_].folders[i].name
+						var A=n.folders[folder_number1_].folders[i].size
+						var B=new Element("option",{value:C})
+						B.injectInside(g)
+						B.setHTML(z)}}
+			})
+			g.addEvent("change",function(){
+				var v=r.value
+				var y=g.value
+				if(y!="none"){
+					q=y}
+				if(y=="none"){
+					q=v}
+				if(y=="none"){
+					f.setHTML("")
+					var x=new Element("option",{value:"none"})
+					x.injectInside(f)
+					x.setHTML(a)}
+				if(y!="none"){
+					f.setHTML("")
+					var C=new Element("option",{value:"none"})
+					C.injectInside(f)
+					C.setHTML(a)
+					for(i=0;i<n.folders[folder_number1_].folders.length;i++) if(n.folders[folder_number1_].folders[i].id==y) folder_number2_=i;
+					for(i=0;i<n.folders[folder_number1_].folders[folder_number2_].folders.length;i++){
+						var D=n.folders[folder_number1_].folders[folder_number2_].folders[i].id
+						var A=n.folders[folder_number1_].folders[folder_number2_].folders[i].name
+						var B=n.folders[folder_number1_].folders[folder_number2_].folders[i].size
+						var C=new Element("option",{value:D})
+						C.injectInside(f)
+						C.setHTML(A)}}
+			})
+			f.addEvent("change",function(){
+				var v=g.value
+				var u=f.value
+				if(u!="none"){
+					q=u}
+				if(u=="none"){
+					q=v}
+			})
+			p.addEvent("click",function(u){
+				new Event(u).stop()
+				try{
+					l.setStyle("display","none")
+					k.setStyle("display","none")
+					$("program"+c+"row").removeClass("active-row")
+				}catch(u){}
+				$("status").setHTML("OK")
+			})
+			m.addEvent("click",function(v){
+				new Event(v).stop()
+				try{
+					l.setStyle("display","none")
+					k.setStyle("display","none")
+				}catch(v){}
+				var u=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/move?v=2&platform=ios&appVersion=1.0",{
+					method:"PUT",onRequest:showLoadingMove,onComplete:function(x){
+						stopLoading()
+						$("program"+c+"row").addClass("removed-row")
+						$("program"+c+"row").addClass("hide")
+						$("program"+c+"row").remove()
+						$("status").setHTML("OK, tallenne siirretty")}
+				}).setHeader("Content-Type","application/x-www-form-urlencoded").setHeader("Authorization","Bearer "+bearer).send("programId="+c+"&folderId="+q)
+			})}
+	}).setHeader("Authorization","Bearer "+bearer).send()}
+//------------------------------------------------------------------------------
+var loadMPC=function(j, download){
+	var j=j.replace(/\D/g,"")
+		<!-- var a=new XHR({method:"GET"}).send("https://api.elisaviihde.fi/etvrecorder/program.sl?programid="+j+"&view=true"+hash()) -->
+		<!-- var new_count = $("viewcount"+j+"counter_2").innerHTML.toInt()+1 -->
+		<!-- $("viewcount"+j).innerHTML = getViewCountString( new_count, j );  -->
+
+	if ( download || SETTINGS_player == 'mpc-hc')
+	{
+		var b=new Json.Remote("https://watchable-api.dc.elisa.fi/V3/recordings/play-options/"+j+"/ios",{ method:"POST",onRequest:function(){showLoadingMPC(download)},onComplete:function(k)
+			{
+				stopLoading()
+				$("status").setHTML("OK")
+				var l=k.requestRouterUrl
+				var h = "";
+				w=new ActiveXObject("WScript.Shell")
+				if ( download )
+				{
+					var path = $('download_path').innerHTML
+					var file_name = $('download_filename').innerHTML
+					var description = $('download_description').innerHTML
+					h = path+"\\"+file_name
+					if ( SETTINGS_external_subtitles )
+						dl_o = ' -e'
+					else
+						dl_o = ''
+					if( SETTINGS_downloader == 'viihdex-dl_py' )
+						try {
+							w.run('py ViihdeX-dl.py '+l+' "'+h+'"'+dl_o)
+						}
+						catch(err) {
+							w.run('python ViihdeX-dl.py '+l+' "'+h+'"'+dl_o)
+						}
+					else if ( SETTINGS_downloader == 'viihdex-dl' )
+						w.run('ViihdeX-dl '+l+' "'+h+'"'+dl_o)
+					else
+						try {
+							w.run('curl -L -C - -o "'+h+'.m3u8" '+l)
+						}
+						catch(err) {
+							w.run('%windir%\\Sysnative\\curl -L -C - -o "'+h+'.m3u8" '+l)
+						}
+					if( SETTINGS_save_description == 1 )
+					{
+						var v=new ActiveXObject("Scripting.FileSystemObject")
+						var h=h.replace(/\\/g,"/")
+						h=h+".txt"
+						var d=v.CreateTextFile(h,true)
+						d.write(description)
+						d.close()
+					}
+				}
+				else if( SETTINGS_player == 'mpc-hc' )
+					w.run("run_mpc-hc.vbs "+l)
+			}}).setHeader("content-type", "application/json; charset=UTF-8").setHeader("Authorization","Bearer "+bearer).send('{"cdnServiceOptions":["s_ttml"],"protocol":"hls","applicationVersion":"1","deviceId":"123","drmPlatform":"ios"}')
+	}
+	else
+	{
+		var b=new Json.Remote("https://watchable-api.dc.elisa.fi/V3/recordings/play-options/"+j+"/ios",{ method:"POST",onRequest:function(){showLoadingMPC(download)},onComplete:function(k)
+			{
+				stopLoading()
+				$("status").setHTML("OK")
+				var l=k.requestRouterUrl
+				var c='"'+vlcGetPath()+'"'
+				var h = "";
+
+				w=new ActiveXObject("WScript.Shell")
+
+				if( SETTINGS_player == 'vlc' )
+				{
+					h += "--deinterlace=0 --sub-language "+SETTINGS_VLC_subtitles_language;
+					w.run(c+" "+h+" "+l)
+				}
+				else if( SETTINGS_player == 'mpc-hc' )
+					w.run("run_mpc-hc.vbs "+l)
+				else
+					w.run("run_mpc-be_hls.vbs "+l)
+
+
+			}}).setHeader("content-type", "application/json; charset=UTF-8").setHeader("Authorization","Bearer "+bearer).send('{"cdnServiceOptions":["s_ttml"],"protocol":"dash","applicationVersion":"1","deviceId":"123","drmPlatform":"ios"}')
+	}
+}
+//------------------------------------------------------------------------------
+var toggleMassButtons=function(f,d){
+	if(f!="select-all")
+	{
+		var f=f.replace(/\D/g,"")
+		var d=d.replace(/\D/g,"")
+		var c=$("program"+f+"row")
+		if(!c.hasClass("selected-row"))
+		{
+			c.addClass("selected-row")
+			programIdArray.push(f)
+			programViewIdArray.push(d)
+		}
+		else
+		{
+			c.removeClass("selected-row")
+			var b=0
+			while(b<programIdArray.length)
+			{
+				if(programIdArray[b]==f)
+				{
+					programIdArray.splice(b,1)
+					programViewIdArray.splice(b,1)
+				}
+				else
+				{
+					b++
+				}
+			}
+		}
+	}
+	else
+	{
+		var a=$$(".program-row")
+		a.each(function(j)
+			{
+				var m=j.id.replace(/\D/g,"")
+				var l=j.pid.replace(/\D/g,"")
+				var k=$("program"+m+"row")
+				var g=$("program"+m+"check")
+				if(!k.hasClass("removed-row"))
+				{
+					if(!k.hasClass("selected-row"))
+					{
+						k.addClass("selected-row")
+						programIdArray.push(m)
+						programViewIdArray.push(l)
+						g.setProperty("checked","checked")
+					}
+					else
+					{
+						k.removeClass("selected-row")
+						g.removeProperty("checked")
+						var h=0
+						while(h<programIdArray.length)
+						{
+							if(programIdArray[h]==m)
+							{
+								programIdArray.splice(h,1)
+								programViewIdArray.splice(h,1)
+							}
+							else
+							{
+								h++
+							}
+						}
+					}
+				}
+			}
+		);
+	}
+}
+//------------------------------------------------------------------------------
+var editFolder=function(h,b){
+	$("status").setHTML("Kansion uudelleennime‰minen")
+	var h=h.replace(/\D/g,"")
+	$("folder"+h+"row").addClass("active-row")
+	var g="<h2>Kansion uudelleennime‰minen</h2>"
+	g+='<div class="program-desc">'
+	g+="<b>Kansion nimi:</b><br><br>"
+	g+='<input type="text" id="new-name" class="input" value="'+b+'" maxlength="64">'
+	g+="</div>"
+	g+='<input type="submit" id="submit-edit" class="button" value="Tallenna muutokset"> '
+	g+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
+	var d=$("modal-bg")
+	var c=$("modal-box")
+	d.setStyle("display","block")
+	c.setStyle("display","block")
+	c.innerHTML='<div id="modal-box-top"></div>'
+	c.innerHTML+='<div id="modal-box-body">'+g+"</div>"
+	c.innerHTML+='<div id="modal-box-bottom"></div>'
+	var f=$("submit-cancel")
+	var a=$("submit-edit")
+	f.addEvent("click",function(j){
+		new Event(j).stop()
+		d.setStyle("display","none")
+		c.setStyle("display","none")
+		$("folder"+h+"row").removeClass("active-row")
+		$("status").setHTML("OK")
+	})
+	a.addEvent("click",function(l){
+		new Event(l).stop()
+		d.setStyle("display","none")
+		c.setStyle("display","none")
+		$("folder"+h+"row").removeClass("active-row")
+		var j=encodingFilter($("new-name").value)
+		var k=new Json.Remote("https://api.elisaviihde.fi/etvrecorder/ready.sl?name="+j+"&rename_folder="+h+"&ajax=true&"+hash(),{
+			method:"GET",onRequest:showLoadingEditFolder,onComplete:function(m){
+				var n=function(){
+					stopLoading()
+					if(folderidCurrent!=""){
+						getDirectory(folderidCurrent,foldernameCurrent)}
+					if(folderidCurrent==""){
+						getDirectory("folder-root","")}}
+				n.delay(2000)}
+		}).send()
+	})}
+var deleteFolder=function(g){
+	$("status").setHTML("Kansion poistaminen")
+	var g=g.replace(/\D/g,"")
+	$("folder"+g+"row").addClass("active-row")
+	var d="<h2>Kansion poistaminen</h2>"
+	d+='<div class="program-desc">'
+	d+='<img src="images/icon-important.png" style="float: left; margin-right: 20px;">';
+	d+= 'Haluatko varmasti poistaa kansion?<br>Poistamisen j‰lkeen myˆs kaikki kansiossa olevat alikansiot ja tallenteet menetet‰‰n,<br>eik‰ tallenteita ole poistamisen j‰lkeen en‰‰ mahdollista palauttaa.</div>'
+	d+='<input type="submit" id="submit-delete" class="button" value="Poista"> '
+	d+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
+	var b=$("modal-bg")
+	var a=$("modal-box")
+	b.setStyle("display","block")
+	a.setStyle("display","block")
+	a.innerHTML='<div id="modal-box-top"></div>'
+	a.innerHTML+='<div id="modal-box-body">'+d+"</div>"
+	a.innerHTML+='<div id="modal-box-bottom"></div>'
+	var c=$("submit-cancel")
+	var f=$("submit-delete")
+	c.addEvent("click",function(h){
+		new Event(h).stop()
+		b.setStyle("display","none")
+		a.setStyle("display","none")
+		$("folder"+g+"row").removeClass("active-row")
+		$("status").setHTML("OK")
+	})
+	f.addEvent("click",function(j){
+		new Event(j).stop()
+		b.setStyle("display","none")
+		a.setStyle("display","none")
+		var h=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders/"+g+"?v=2&platform=online&appVersion=1.0&includeMetadata=true",{
+			method:"DELETE",onRequest:showLoadingDeleteFolder,onComplete:function(k){
+				stopLoading()
+				$("folder"+g+"row").remove()
+				$("status").setHTML("OK, kansio poistettu")}
+		}).setHeader("Content-Type","application/x-www-form-urlencoded").setHeader("Authorization","Bearer "+bearer).send("folderId="+g)
+	})}
+//------------------------------------------------------------------------------
+var selectAll=function(){
+	var counter = 0;
+	var a=$$(".program-row")
+	a.each(function(j)
+		{
+			counter++;
+			var m=j.id.replace(/\D/g,"")
+			var l=j.pid.replace(/\D/g,"")
+			var k=$("program"+m+"row")
+			var g=$("program"+m+"check")
+			if(!k.hasClass("removed-row"))
+			{
+				if(!k.hasClass("selected-row"))
+				{
+					k.addClass("selected-row")
+					programIdArray.push(m)
+					programViewIdArray.push(l)
+					g.setProperty("checked","checked")
+				}
+			}
+		});
+	return counter;
+}
+//------------------------------------------------------------------------------
+var showViihde=function(){
+	var a=""
+	a+='<div class="container">'
+	a+='<div id="logo-area">X Media Manager v1.5.1X1.5.q5.2'
+	a+='<div id="navi">'
+	var hide_class = '';
+	if( SETTINGS_child_mode == 1 ) hide_class = ' hide';
+	a+='<span id="recordings" onClick="getRecordings();" class="navi-link'+hide_class+'">Tallenteet</span>&nbsp;&nbsp;'
+	a+='<span id="guide" onClick="getGuide();" class="navi-link'+hide_class+'">Ohjelmakartta</span>&nbsp;&nbsp;'
+	a+='<span id="settings" onClick="showSettings();" class="navi-link'+hide_class+'">Asetukset</span>'
+	a+='&nbsp;&nbsp;<label onClick="childModeClicked();"><span class="navi-link">Lapsitila <span id="childmode">';
+	if( SETTINGS_child_mode == 1 )
+		a+='pois'
+	else
+		a+='p‰‰lle'
+	a+='</span></span></label>'
+	a+="</div>"
+	a+="</div>"
+	a+="</div>"
+	a+='<div class="content-top"></div>'
+	a+='<div class="content" id="status-area">Tila: <span id="status">Kirjautuminen</span></div>'
+	a+='<div class="content-bottom"></div>'
+	a+='<div id="menu-area">'
+	a+='<div class="content-top"></div>'
+	a+='<div class="content">'
+	if( SETTINGS_child_mode == 1 )
+		a+='<div id="menu_content" class="hide">'
+	else
+		a+='<div id="menu_content">'
+	a+='<input type="submit" value="Siirr‰ valitut" id="mass-move" class="button"> '
+	a+='<input type="submit" value="Poista valitut" id="mass-delete" class="button"> '
+	a+='<input type="submit" value="Lis‰‰ uusi kansio" id="add-folder" class="button"> '
+	a+='<input type="submit" value="Kaksoiskappaleiden haku" id="find-duplicates" class="button"> '
+	a+='<input type="submit" value="Tyhjenn‰ roskakori" id="empty-trash-bin" class="button hide"> '
+	a+='<div id="search-area">'
+	a+='<div class="input-title">Hae tallenteista:</div> '
+	a+='<input type="text" id="query" class="input"> '
+	a+='<input type="submit" value="Hae" id="search" class="button search-margin-fix"> '
+	a+="</div>"
+	a+="</div>"
+	a+='<div id="data"></div>'
+	a+="</div>"
+	a+='<div class="content-bottom"></div>'
+	a+="</div>"
+	a+='<div id="guide-area">'
+	a+='<div class="content-top"></div>'
+	a+='<div class="content">'
+	a+='<div id="guide-menu"></div>'
+	a+='<span id="guide-data"></span>'
+	a+="</div>"
+	a+='<div class="content-bottom"></div>'
+	a+="</div>"
+	a+='<div id="login-content">'
+	a+='<div class="content-top"></div>'
+	a+='<div class="content">'
+	a+='<div id="login-area">'
+	a+='<div class="input-title">K‰ytt‰j‰tunnus:</div>'
+	a+='<div class="input-field"><input type="text" id="username" class="input" value=""></div>'
+	a+='<div class="input-title">Salasana:</div>'
+	a+='<div class="input-field"><input type="password" id="password" class="input" value=""></div>'
+	a+='<div class="input-title">&nbsp;</div>'
+	a+='<div class="input-field"><input type="submit" id="submit-login" class="button" value="Kirjaudu"></div>'
+	a+='<div class="input-title">&nbsp;</div>'
+	a+='<div class="input-field"><input type="checkbox" id="remember-login" class="login-checkbox"><label for="remember-login">Tallenna kirjautumistiedot</label></div>'
+	a+="</div>"
+	a+='<div id="login-hint">'
+	a+="<b>Vastuunrajoitukset / Disclaimer</b><br><br>"
+	a+='Elisa Viihde Media Manager ei ole Elisan tarjoama tai tukema sovellus. Kyseess‰ on harrastusprojekti, josta on toivottavasti iloa ja apua Elisa Viihde -palvelun k‰ytt‰jille tallenteiden hallinnoimisessa. Sovellus on testattu ja todettu t‰ysin toimivaksi, mutta virhetilanteita saattaa siit‰ huolimatta synty‰. Sovellus tarjotaan sellaisenaan ilman mink‰‰nlaista takuuta ja sovelluksen k‰yttˆ on t‰ysin omalla vastuullasi. Lis‰tietoja sovelluksen juurihakemistossa olevassa LUEMINUT.txt -tiedostossa. Kehitysehdotuksia ja palautetta voit antaa <span url="http://yhteiso.elisa.fi/t5/Elisa-Viihde-Ominaisuudet-ja/ViihdeX-Media-Manager-Tallenteiden-hallinta-Windowsille/m-p/188707" onClick="openURL(url);" class="web-link viihde">Elisa Palstalla</span>.'
+	a+="</div>"
+	a+="</div>"
+	a+='<div class="content-bottom"></div>'
+	a+="</div>"
+	a+='<div id="modal-bg"></div>'
+	a+='<div id="modal-box"></div>'
+	a+='<div id="popup-dialog" class="popup"></div>'
+	a+="</div>"
+	$(document.body).innerHTML=a
+	$("modal-bg").addEvent("click", function(j){ new Event(j).stop(); dialog_close(); });
+	if(loggedIn)
+	{
+		loadSystem()
+		sessionKeepAlive()
+	}
+	document.addEvent("keydown",function(j){
+		var h=116
+		if(j.keyCode==h)
+		{
+			new Event(j).stop()
+		}
+	})
+	try
+	{
+		var d=new ActiveXObject("Scripting.FileSystemObject")
+		var c=d.OpenTextFile(loginDataFile,1,false)
+		var g=encryption.decode(c.readline())
+		var b=encryption.decode(c.readline())
+		c.close()
+		rememberLogin=true
+	}
+	catch(f)
+	{
+		rememberLogin=false
+	}
+	if(rememberLogin)
+	{
+		$("username").value=g
+		$("password").value=b
+		$("remember-login").setProperty("checked","checked")
+	}
+	if( $('username').value == '' ) $('username').focus();
+	else if( $('password').value == '' ) $('password').focus();
+	else $('submit-login').focus();
+
+	$("remember-login").addEvent("click",function(k)
+		{
+			if(!$("remember-login").getProperty("checked"))
+			{
+				try
+				{
+					var j=new ActiveXObject("Scripting.FileSystemObject")
+					var h=j.DeleteFile(loginDataFile,true)
+				}
+				catch(k){}
+				$("username").value=""
+				$("password").value=""}
+		})
+
+	$("empty-trash-bin").addEvent("click",function(k){
+		if( selectAll() > 0 ) $("mass-delete").click();
+	});
+	$("submit-login").addEvent("click",function(k){
+		new Event(k).stop()
+		var l=encodingFilter($("username").value)
+		var j=encodingFilter($("password").value)
+		if(l!=""&&j!="")
+		{
+			var h_=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/auth/authorize/access-code",{
+				method:"POST",onComplete:function(A){
+					var h=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/auth/authorize/access-token",{
+						method:"POST",onRequest:showLoadingLogin,onComplete:function(n){
+							stopLoading()
+							var m=n
+							if(m.response_type=='token')
+							{
+								loggedIn=true
+							}
+							if(loggedIn)
+							{
+								if($("remember-login").getProperty("checked"))
+								{
+									var q=new ActiveXObject("Scripting.FileSystemObject")
+									var p=q.CreateTextFile(loginDataFile,true)
+									l=encryption.encode(decodingFilter(l))
+									j=encryption.encode(decodingFilter(j))
+									p.writeline(l+"\r\n"+j+"\r\n")
+									p.close()
+								}
+								bearer=m.access_token
+								loadSystem()
+								sessionKeepAlive()
+							}
+							else
+							{
+								$("username").value=""
+								$("password").value=""
+								$("status").setHTML("Kirjautuminen ep‰onnistui, k‰ytt‰j‰tunnus tai salasana oli virheellinen")
+							}
+						}
+					}).setHeader("Content-Type","application/x-www-form-urlencoded").send("username="+l+"&password="+j+"&grant_type=authorization_code&client_id=external&code="+A.code)}
+			}).send('{"client_secret": "nZhkFGz8Zd8w", "response_type": "code", "client_id": "external", "scopes": []}')
+		}});
+
+}
+//------------------------------------------------------------------------------
+function BrowseForFolder2(Hwnd, sTitle, sDefaultFolder, iOptions, vRootFolder)
+{
+	var shell = new ActiveXObject("Shell.Application");
+	var folder = shell.BrowseForFolder(Hwnd, sTitle, iOptions, vRootFolder);
+
+	// Dialog has been closed (by the Close command or the Cancel button)
+	if ( folder == null ) {
+		return null;
+	}
+
+	var e;
+	var path = null;
+
+	try {
+		path = folder.ParentFolder.ParseName(folder.Title).Path;
+	} catch (e) {
+		var colon = folder.Title.lastIndexOf(":");
+		if ( colon == -1 ) {
+			return null;
+		}
+
+		path = folder.Title.slice(colon - 1, colon + 1) + "\\";
+	}
+
+	return path;
+}
+//------------------------------------------------------------------------------
+function changeDownloadPath()
+{
+	start_folder = 'c:\\Program files'
+	BIF_NEWDIALOGSTYLE = 64; //0x00000040;
+	var flags = BIF_NEWDIALOGSTYLE
+	path = BrowseForFolder2(0, 'Valitse tallennus kansio', start_folder, flags )
+	if( path != null )
+	{
+		SETTINGS_download_path = path;
+		$('download_path').setHTML(SETTINGS_download_path);
+		saveSettings();
+	}
+
+}
+//------------------------------------------------------------------------------
+function downloadClicked(id_str)
+{
+	var program_id=id_str.replace(/\D/g,"")
+	var f=$("modal-bg")
+	var d=$("modal-box")
+	f.setStyle("display","none")
+	d.setStyle("display","none")
+	$("program"+program_id+"row").removeClass("active-row")
+	$("status").setHTML("OK")
+	loadMPC(id_str, true)
+	downloaded_record_ids.push(program_id);
+	$('dl_'+program_id+'_img').setProperty('src', "images/icon-downloaded.jpg" );
+
+	var v=new ActiveXObject("Scripting.FileSystemObject")
+	var t=v.CreateTextFile(downloadedFile,true)
+	t.writeline( downloaded_record_ids.join(',') );
+	t.close()
+
+
+}
+//------------------------------------------------------------------------------
+var download=function(program_id){
+	var a=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/recordings/info/"+program_id+"?v=2.1&platform=online&appVersion=1.0&includeMetadata=true",{
+		method:"GET",onRequest:showLoadingDetails,onComplete:function(c)
+		{
+			stopLoading()
+			$("status").setHTML("Tallenteen lataus")
+			showFreeText(c.name)
+			$("program"+program_id+"row").addClass("active-row")
+			if(!c.description)
+			{
+				c.description="<i>"+CONST_record_has_no_desc+"</i>"
+			}
+			var h='<span class="link" id="close-modal"><img src="images/close.png"></span>'
+			h+="<h2>"+c.name+"</h2>"
+			var duration_h = parseInt(c.duration / 3600)
+			var duration_m = parseInt((c.duration - duration_h * 3600) / 60)
+			duration=''
+			if(duration_h==0)
+			{
+				duration = duration_m + ' min'
+			}
+			else
+			{
+				duration = duration_h + ' t ' + duration_m + ' min'
+			}
+			h+='<div class="program-specs">'+c.channelName+" "+c.startTime+", kesto "+duration+" ("
+			h+="programid: "+c.programId
+			h+=")<img src="+c.images.poster.widescreen.small+" align=right border=2></div>"
+			h+='<div class="program-desc" id="download_description">'+c.description+"</div>"
+			h+='Latauskansio:<br>'
+			h+='<span id="download_path">'+SETTINGS_download_path+'</span> &nbsp; '
+			h+='<input type="submit" onClick="changeDownloadPath();" class="button" value="Vaihda"><br>'
+			h+='<br>Tiedoston nimi:<br>'
+			var t = c.startTime.split(' ');
+			var da = t[0].split('-');
+			var ti = t[1].split(':');
+			var file_name = c.name
+			file_name += " "+da[0]+"."+da[1]+"."+da[2]
+			file_name += " "+ti[0]+"."+ti[1]
+			file_name = file_name.replace( /[\/:*?"<>|]/g, "_" );
+			h+='<span id="download_filename">'+file_name+'</span>'
+			h+='.ts<br>'
+			h+='<br><input type="submit" id="submit'+program_id+'download" onClick="downloadClicked(id);" class="button" value="Lataa">'
+			h+=' &nbsp; <input type="button" id="download-cancel" class="button" value="Peruuta">'
+			var f=$("modal-bg")
+			var d=$("modal-box")
+			f.setStyle("display","block")
+			d.setStyle("display","block")
+			d.innerHTML='<div id="modal-box-top"></div>'
+			d.innerHTML+='<div id="modal-box-body">'+h+"</div>"
+			d.innerHTML+='<div id="modal-box-bottom"></div>'
+			var g=$("close-modal")
+			g.addEvent("click",function(j)
+				{
+					new Event(j).stop()
+					f.setStyle("display","none")
+					d.setStyle("display","none")
+					$("program"+program_id+"row").removeClass("active-row")
+					$("status").setHTML("OK")
+				})
+			var download_cancel_btn=$("download-cancel")
+			download_cancel_btn.addEvent("click",function(j)
+				{
+					new Event(j).stop()
+					f.setStyle("display","none")
+					d.setStyle("display","none")
+					$("program"+program_id+"row").removeClass("active-row")
+					$("status").setHTML("OK")
+				})
+
+
+		}
+	}).setHeader("Authorization","Bearer "+bearer).send()
+}
+//------------------------------------------------------------------------------
+loadSettings();
+try
+{
+	var fso=new ActiveXObject("Scripting.FileSystemObject")
+	var file=fso.OpenTextFile(resolutionFile,1,false)
+	width=file.readline()
+	height=file.readline()
+	var custom=file.readline()
+	file.close()
+	if(custom=="custom")
+	{
+		customResolution=true
+	}
+}
+catch(e){}
+resizeWindow(width,height)
+
+
+window.addEvent("domready",function()
+	{
+		showViihde()
+	});
+
+		</script>
+	</head>
+	<body>
+
+	</body>
+	</html>
