@@ -1,3 +1,6 @@
+v 1.5.1X1.5.q5.3 (2.6.2021)
+- Lis‰tty mahdollisuus valita lataajaksi FFmpeg, Streamlink, VLC tai youtube-dl (HUOM. erillisi‰ tekstityksi‰ tai vaihtoehtoisia ‰‰niraitoja EI ladata)
+
 v 1.5.1X1.5.q5.2 (18.5.2021)
 - Lis‰tty mahdollisuus ladata tekstitykset erillisiin srt-tiedostoihin
 - Muutettu latausikkunaa informatiivisemmaksi

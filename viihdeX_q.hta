@@ -16,7 +16,7 @@
 			icon="images/favicon.ico"
 			/>
 
-		<title>Elisa ViihdeX Media Manager v1.5.1X1.5.q5.2</title>
+		<title>Elisa ViihdeX Media Manager v1.5.1X1.5.q5.3</title>
 		<link rel="stylesheet" type="text/css" href="css/styles.css">
 		<link rel="stylesheet" type="text/css" href="css/sortableTable.css">
 		<script type="text/javascript" src="js/mootools.js"></script>
@@ -243,16 +243,21 @@ var showLoadingMassDelete=function(){
 var showLoadingMPC=function(download){
 	if (download)
 	{
-		if (SETTINGS_downloader == 'ffmpeg')
-			$("status").setHTML('Aloitetaan tallenteen lataus FFmpeg:llä<span id="loading"></span>')
-		else if (SETTINGS_downloader == 'streamlink')
-			$("status").setHTML('Aloitetaan tallenteen lataus Streamlinkillä<span id="loading"></span>')
-		else if (SETTINGS_downloader == 'curl')
-			$("status").setHTML('Aloitetaan HLS master playlistin latausä<span id="loading"></span>')
-		else if (SETTINGS_downloader == 'viihdex-dl_py')
+		if (SETTINGS_downloader == 'viihdex-dl_py')
 			$("status").setHTML('Aloitetaan tallenteen lataus Viihdex-dl:llä<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'viihdex-dl')
 			$("status").setHTML('Aloitetaan tallenteen lataus Viihdex-dl:llä<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'ffmpeg')
+			$("status").setHTML('Aloitetaan tallenteen lataus FFmpeg:llä<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'streamlink')
+			$("status").setHTML('Aloitetaan tallenteen lataus Streamlinkillä<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'youtube-dl')
+			$("status").setHTML('Aloitetaan tallenteen lataus youtube-dl:llä<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'vlc')
+			$("status").setHTML('Aloitetaan tallenteen lataus VLC:llä<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'curl')
+			$("status").setHTML('Aloitetaan HLS master playlistin latausä<span id="loading"></span>')
+
 	}
 	else
 	{
@@ -3118,8 +3123,8 @@ var showSettings=function(){
 
 			f+='<br><div style="float: right;">'
 			f+="<br><b>Lataaja</b><br>";
-			var downloader_values = [ "viihdex-dl", "viihdex-dl_py", "curl (.m3u8)" ];
-			var downloader_texts =  [ "ViihdeX-dl (.exe)", "ViihdeX-dl (.py)", "curl (.m3u8)" ];
+			var downloader_values = [ "viihdex-dl", "viihdex-dl_py", "curl", "ffmpeg", "streamlink", "youtube-dl", "vlc" ];
+			var downloader_texts =  [ "ViihdeX-dl (.exe)", "ViihdeX-dl (.py)", "curl (.m3u8)", "FFmpeg (EI TEKST.)", "Streamlink (EI TEKST.)", "youtube-dl (EI TEKST.)", "VLC (EI TEKST.)" ];
 			f+='<select class="select" id="dropdown-downloader-list">'
 			for( i=0; i<downloader_values.length; i++ )
 			{
@@ -3657,6 +3662,19 @@ var loadMPC=function(j, download){
 						}
 					else if ( SETTINGS_downloader == 'viihdex-dl' )
 						w.run('ViihdeX-dl '+l+' "'+h+'"'+dl_o)
+					else if( SETTINGS_downloader == 'vlc' )
+					{
+						var c='"'+vlcGetPath()+'"'
+						var g = ' --adaptive-logic=highest --sout file/ts:'
+						l += " vlc://quit"
+						w.run(c+g+'"'+h+'.ts" '+l)
+					}
+					else if ( SETTINGS_downloader == 'ffmpeg' )
+						w.run('ffmpeg -v error -stats -i '+l+' -c copy "'+h+'.mkv"')
+					else if ( SETTINGS_downloader == 'streamlink' )
+						w.run('streamlink -o "'+h+'.ts" "hls://'+l+' name_fmt=\'{pixels}_{bitrate}\'" best')
+					else if ( SETTINGS_downloader == 'youtube-dl' )
+						w.run('youtube-dl --hls-prefer-native -f "bestvideo+bestaudio[language=fi]" -o "'+h+'.mp4" '+l)
 					else
 						try {
 							w.run('curl -L -C - -o "'+h+'.m3u8" '+l)
@@ -3886,7 +3904,7 @@ var selectAll=function(){
 var showViihde=function(){
 	var a=""
 	a+='<div class="container">'
-	a+='<div id="logo-area">X Media Manager v1.5.1X1.5.q5.2'
+	a+='<div id="logo-area">X Media Manager v1.5.1X1.5.q5.3'
 	a+='<div id="navi">'
 	var hide_class = '';
 	if( SETTINGS_child_mode == 1 ) hide_class = ' hide';

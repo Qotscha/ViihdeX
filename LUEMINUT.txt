@@ -69,6 +69,8 @@ Tarvittavat ohjelmat tallenteiden lataukseen
     - ffmpeg audio codec:   FFmpeg:n audiokoodekkiparametrit, oletuksena audiota ei transkoodata
 - FFmpeg (https://ffmpeg.org/download.html#build-windows)
   - Sijoita ffmpeg.exe samaan kansioon tai huolehdi siitä, että ffmpeg.exen sisältävä kansio on lisätty PATH-ympäristömuuttujaan.
+- Lataajaksi voi valita myös FFmpeg:n, Streamlinkin, youtube-dl:n tai VLC:n, mutta tällöin erillisiä tekstitysraitoja ei ladata (koskee 28.6.2020 jälkeisiä
+  tallenteita). Lisäksi ladataan ainoastaan yksi ääniraita (joka voi lataajasta riippuen olla äänitekstitysraita).
 
 Tärkeimmät muutokset Elisa ViihdeX Media Manager v1.5.1X1.5:een verrattuna:
 - Tallenteiden lataukseen ja toistoon käytetään HTTP Live Streaming (HLS) ja Dynamic Adaptive Streaming over HTTP (DASH) -protokollia.
