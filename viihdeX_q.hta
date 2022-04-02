@@ -47,12 +47,12 @@ var SETTINGS_checkbox_left
 var use_trash_bin = "yes" // "no"
 var default_pin_code = '0000';
 var duplicate_name_drop = [ '(16)', '(12)', '(7)', '(K15)', '(K13)', '(S)' ];
-var duplicate_desc_drop = [ 'UUSI KAUSI.', 'TV-ENSI-ILTA!', 'SUOMEN-ENSI-ILTA', 'Suora l‰hetys.', '(u)' ];
+var duplicate_desc_drop = [ 'UUSI KAUSI.', 'TV-ENSI-ILTA!', 'SUOMEN-ENSI-ILTA', 'SUOMEN TV-ENSI-ILTA', 'Suora l√§hetys.', '(u)' ];
 
 
 // Consts
 var CONST_record_has_no_desc = "Ohjelmalla ei ole kuvausta"
-var child_on = 'Kyll‰'
+var child_on = 'Kyll√§'
 var child_off = 'Ei'
 var err_id_file_not_found = -2146828235;
 var err_id_input_past_end_of_file = -2146828226;
@@ -152,7 +152,7 @@ function start_time_to_text( start_time )
 	today += "."+d.getYear();
 	var weekday = getWeekday(da[0], da[1], da[2]);
 	var text = weekday+' '+da[2]+'.'+da[1]+'.'+da[0]+' '+ti[0]+':'+ti[1];
-	if( da[2]+'.'+da[1]+'.'+da[0] == today ) text += ' (t‰n‰‰n)';
+	if( da[2]+'.'+da[1]+'.'+da[0] == today ) text += ' (t√§n√§√§n)';
 	return text;
 }
 
@@ -216,7 +216,7 @@ var showIndicator=function()
 }
 //------------------------------------------------------------------------------
 var showLoadingLogin=function(){
-	$("status").setHTML('Kirjaudutaan sis‰‰n<span id="loading"></span>')
+	$("status").setHTML('Kirjaudutaan sis√§√§n<span id="loading"></span>')
 	showIndicator()}
 var showLoading=function(){
 	$("data").setStyle("display","none")
@@ -229,10 +229,10 @@ var showLoadingFolderList=function(){
 	$("status").setHTML('Ladataan kansiolistaa, odota<span id="loading"></span>')
 	showIndicator()}
 var showLoadingMove=function(){
-	$("status").setHTML('Siirret‰‰n tallennetta<span id="loading"></span>')
+	$("status").setHTML('Siirret√§√§n tallennetta<span id="loading"></span>')
 	showIndicator()}
 var showLoadingMassMove=function(){
-	$("status").setHTML('Siirret‰‰n tallenteita (<span id="current-item">0</span>/<span id="total-items"></span>)<span id="loading"></span>')
+	$("status").setHTML('Siirret√§√§n tallenteita (<span id="current-item">0</span>/<span id="total-items"></span>)<span id="loading"></span>')
 	showIndicator()}
 var showLoadingDelete=function(){
 	$("status").setHTML('Poistetaan tallennetta<span id="loading"></span>')
@@ -244,53 +244,53 @@ var showLoadingMPC=function(download){
 	if (download)
 	{
 		if (SETTINGS_downloader == 'viihdex-dl_py')
-			$("status").setHTML('Aloitetaan tallenteen lataus Viihdex-dl:ll‰<span id="loading"></span>')
+			$("status").setHTML('Aloitetaan tallenteen lataus Viihdex-dl:ll√§<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'viihdex-dl')
-			$("status").setHTML('Aloitetaan tallenteen lataus Viihdex-dl:ll‰<span id="loading"></span>')
+			$("status").setHTML('Aloitetaan tallenteen lataus Viihdex-dl:ll√§<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'ffmpeg')
-			$("status").setHTML('Aloitetaan tallenteen lataus FFmpeg:ll‰<span id="loading"></span>')
+			$("status").setHTML('Aloitetaan tallenteen lataus FFmpeg:ll√§<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'streamlink')
-			$("status").setHTML('Aloitetaan tallenteen lataus Streamlinkill‰<span id="loading"></span>')
+			$("status").setHTML('Aloitetaan tallenteen lataus Streamlinkill√§<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'youtube-dl')
-			$("status").setHTML('Aloitetaan tallenteen lataus youtube-dl:ll‰<span id="loading"></span>')
+			$("status").setHTML('Aloitetaan tallenteen lataus youtube-dl:ll√§<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'vlc')
-			$("status").setHTML('Aloitetaan tallenteen lataus VLC:ll‰<span id="loading"></span>')
+			$("status").setHTML('Aloitetaan tallenteen lataus VLC:ll√§<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'curl')
-			$("status").setHTML('Aloitetaan HLS master playlistin lataus‰<span id="loading"></span>')
+			$("status").setHTML('Aloitetaan HLS master playlistin lataus√§<span id="loading"></span>')
 
 	}
 	else
 	{
 		if (SETTINGS_player == 'mpc-hc')
-			$("status").setHTML('Valmistellaan MPC-HC:t‰, odota<span id="loading"></span>')
+			$("status").setHTML('Valmistellaan MPC-HC:t√§, odota<span id="loading"></span>')
 		else if (SETTINGS_player == 'vlc')
-			$("status").setHTML('Valmistellaan VLC:t‰, odota<span id="loading"></span>')
+			$("status").setHTML('Valmistellaan VLC:t√§, odota<span id="loading"></span>')
 	}
 	showIndicator()}
 var showLoadingNewFolder=function(){
-	$("status").setHTML('Uusi kansio lis‰tty, p‰ivitet‰‰n kansiolistaa<span id="loading"></span>')
+	$("status").setHTML('Uusi kansio lis√§tty, p√§ivitet√§√§n kansiolistaa<span id="loading"></span>')
 	showIndicator()}
 var showLoadingDeleteFolder=function(){
 	$("status").setHTML('Poistetaan kansiota<span id="loading"></span>')
 	showIndicator()}
 var showLoadingEditFolder=function(){
-	$("status").setHTML('Muutokset tallennettu, p‰ivitet‰‰n kansiolistaa<span id="loading"></span>')
+	$("status").setHTML('Muutokset tallennettu, p√§ivitet√§√§n kansiolistaa<span id="loading"></span>')
 	showIndicator()}
 var showLoadingGuide=function(){
 	$("data").setStyle("display","none")
 	$("status").setHTML('Ladataan tietoja, odota<span id="loading"></span>')
 	showIndicator()}
 var showRefreshGuide=function(){
-	$("status").setHTML('Ohjelma merkitty aina tallentuvaksi, p‰ivitet‰‰n ohjelmakarttaa<span id="loading"></span>')
+	$("status").setHTML('Ohjelma merkitty aina tallentuvaksi, p√§ivitet√§√§n ohjelmakarttaa<span id="loading"></span>')
 	showIndicator()}
 var showRefreshGuideDelete=function(){
-	$("status").setHTML('Ohjelma poistettu aina tallentuvista, p‰ivitet‰‰n ohjelmakarttaa<span id="loading"></span>')
+	$("status").setHTML('Ohjelma poistettu aina tallentuvista, p√§ivitet√§√§n ohjelmakarttaa<span id="loading"></span>')
 	showIndicator()}
 var showLoadingAddRecord=function(){
-	$("status").setHTML('Lis‰t‰‰n tallennuspyyntˆ‰<span id="loading"></span>')
+	$("status").setHTML('Lis√§t√§√§n tallennuspyynt√∂√§<span id="loading"></span>')
 	showIndicator()}
 var showLoadingDeleteRecord=function(){
-	$("status").setHTML('Poistetaan tallennuspyyntˆ‰<span id="loading"></span>')
+	$("status").setHTML('Poistetaan tallennuspyynt√∂√§<span id="loading"></span>')
 	showIndicator()}
 var showLoadingDeleteWildcard=function(){
 	$("status").setHTML('Poistetaan aina tallentuvaa<span id="loading"></span>')
@@ -581,7 +581,7 @@ var allRecordsLoaded=function(){
 	var text = '';
 	if( duplicate_count == 0 )
 	{
-		text+= '<br><br><b>Kaksoiskappaleita ei lˆytynyt</b><br>'
+		text+= '<br><br><b>Kaksoiskappaleita ei l√∂ytynyt</b><br>'
 		$('duplicate_status').setHTML(text);
 		var btn_cancel=$("submit-cancel")
 		var btn_search=$("submit-search")
@@ -600,9 +600,9 @@ var allRecordsLoaded=function(){
 		$("add-folder").setProperty("disabled","disabled")
 		$("find-duplicates").setProperty("disabled","disabled")
 		if( duplicate_count == 1 )
-			text+= 'Lˆytyi yksi kaksoiskappale';
+			text+= 'L√∂ytyi yksi kaksoiskappale';
 		else
-			text+= 'Lˆytyi '+duplicate_count+' kaksoiskappaletta';
+			text+= 'L√∂ytyi '+duplicate_count+' kaksoiskappaletta';
 		$("status").setHTML("OK. "+text)
 	}
 }
@@ -614,7 +614,7 @@ function show_original( original_record_id, dup_record_id, state, ypos )
 		var org = $( 'program'+original_record_id+'details' );
 		var dup = $( 'program'+dup_record_id+'details' );
 		var html = '';
-		html += 'Alkuper‰isen tiedot:<br>';
+		html += 'Alkuper√§isen tiedot:<br>';
 		if( org == null )
 		{
 			html += '(poistettu tai siirretty)';
@@ -669,7 +669,7 @@ function show_original( original_record_id, dup_record_id, state, ypos )
 //------------------------------------------------------------------------------
 var getRecordsFromFolder=function(folder_id){
 	myTable.sort(3,SETTINGS_duplicate_pre_sorting);
-	$('duplicate_status').setHTML('<br><b>Haetaan kuvauksia Elisa Viihteest‰:</b> <span id="records_desc_got">?</span> / <span id="recordings_in_folder">?</span> &nbsp; Odota...<br>');
+	$('duplicate_status').setHTML('<br><b>Haetaan kuvauksia Elisa Viihteest√§:</b> <span id="records_desc_got">?</span> / <span id="recordings_in_folder">?</span> &nbsp; Odota...<br>');
 	// Get ids of records in current folder
 	var record_ids = [];
 	var rid = 0;
@@ -971,7 +971,7 @@ var getDirectory=function(b,a){
 				t+='<th axis="string">Alikansio tai tallenne</th>'
 				t+='<th class="disable-sorting">&nbsp;</th>'
 				t+='<th axis="string">Kanava</th>'
-				t+='<th id="lahetysaika" axis="custom">L‰hetysaika</th>'
+				t+='<th id="lahetysaika" axis="custom">L√§hetysaika</th>'
 				t+='<th axis="string">Tila</th>'
 				t+='<th class="disable-sorting">Toiminnot</th>'
 				if( root_folder )
@@ -992,7 +992,7 @@ var getDirectory=function(b,a){
 					t+="<td>-</td>"
 					t+="<td>-</td>"
 					t+="<td>-</td>"
-					t+='<td><span id="folder-root" onClick="getDirectory(id, \'\');" class="link">Takaisin p‰‰kansioon</span>&nbsp;&nbsp;&nbsp;</td>'
+					t+='<td><span id="folder-root" onClick="getDirectory(id, \'\');" class="link">Takaisin p√§√§kansioon</span>&nbsp;&nbsp;&nbsp;</td>'
 					t+="<td>-</td>"
 					if( SETTINGS_checkbox_left != 1 )
 						t+="<td>-</td>"
@@ -1100,7 +1100,7 @@ var getDirectory=function(b,a){
 								html+="<td>"
 								if( SETTINGS_child_mode == 0 )
 								{
-									html+='<span id="folder'+n+'open" name="'+l+'" onClick="editFolder(id, name);" class="link">Nime‰</span>&nbsp;&nbsp;&nbsp;'
+									html+='<span id="folder'+n+'open" name="'+l+'" onClick="editFolder(id, name);" class="link">Nime√§</span>&nbsp;&nbsp;&nbsp;'
 									html+='<span id="folder'+n+'open" onClick="deleteFolder(id);" class="link">Poista</span>&nbsp;&nbsp;&nbsp;'
 								}
 								html+="</td>"
@@ -1174,7 +1174,7 @@ var getDirectory=function(b,a){
 									t+='-';
 								else
 								{
-									t+='<span id="program'+p+'move" pid="program'+n+'move" onClick="moveProgram(id);" class="link">Siirr‰</span>&nbsp;&nbsp;&nbsp;'
+									t+='<span id="program'+p+'move" pid="program'+n+'move" onClick="moveProgram(id);" class="link">Siirr√§</span>&nbsp;&nbsp;&nbsp;'
 									if( folderidCurrent != trash_bin_folder_id )
 										t+='<span id="program'+p+'trash" pid="program'+n+'trash" onClick="moveProgramToTrashBin(id, id);" class="link">Poista</span>&nbsp;&nbsp;&nbsp;'
 									else
@@ -1250,14 +1250,14 @@ var getDirectory=function(b,a){
 			{
 				var p="<h2>Tallenteiden poistaminen roskakoriin</h2>"
 				p+='<div class="program-desc">'
-				p+='Haluatko varmasti poistaa valitut tallenteet?<br>Poistamisen j‰lkeen tallenteet lˆyt‰‰ roskakorista.</div>'
+				p+='Haluatko varmasti poistaa valitut tallenteet?<br>Poistamisen j√§lkeen tallenteet l√∂yt√§√§ roskakorista.</div>'
 			}
 			else
 			{
 				var p="<h2>Tallenteiden poistaminen</h2>"
 				p+='<div class="program-desc">'
 				p+='<img src="images/icon-important.png" style="float: left; margin-right: 20px;">';
-				p+='Haluatko varmasti poistaa valitut tallenteet?<br>Poistamisen j‰lkeen tallenteita ei ole en‰‰ mahdollista palauttaa.</div>'
+				p+='Haluatko varmasti poistaa valitut tallenteet?<br>Poistamisen j√§lkeen tallenteita ei ole en√§√§ mahdollista palauttaa.</div>'
 			}
 			p+='<input type="submit" id="submit-delete" class="button" value="Poista"> '
 			p+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
@@ -1362,10 +1362,10 @@ var getDirectory=function(b,a){
 			var l=""
 			var m=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders?v=2&platform=ios&appVersion=1.0",{
 				method:"GET",onRequest:showLoadingFolderList,onComplete:function(B){
-					$("status").setHTML("Tallenteiden siirt‰minen")
-					var x="<h2>Tallenteiden siirt‰minen</h2>"
+					$("status").setHTML("Tallenteiden siirt√§minen")
+					var x="<h2>Tallenteiden siirt√§minen</h2>"
 					x+='<div class="program-desc">'
-					x+="<b>Siirr‰ kansioon:</b><br><br>"
+					x+="<b>Siirr√§ kansioon:</b><br><br>"
 					x+='<select class="select" id="dropdown-move">'
 					x+='<option value="none">'+l+"</option>"
 					x+='<option value="0">(oletus)</option>'
@@ -1385,9 +1385,9 @@ var getDirectory=function(b,a){
 					x+=' <select class="select" id="dropdown-move3">'
 					x+='<option value="none">'+l+"</option>"
 					x+="</select>"
-					x+="<br><br>Siirton‰kym‰ tukee vain kolmen tason alikansiopuuta, joten syvemm‰ll‰ olevia alikansioita ei voi k‰ytt‰‰ t‰ll‰ sovelluksella."
+					x+="<br><br>Siirton√§kym√§ tukee vain kolmen tason alikansiopuuta, joten syvemm√§ll√§ olevia alikansioita ei voi k√§ytt√§√§ t√§ll√§ sovelluksella."
 					x+="</div>"
-					x+='<input type="submit" id="submit-move" class="button" value="Siirr‰" disabled> '
+					x+='<input type="submit" id="submit-move" class="button" value="Siirr√§" disabled> '
 					x+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
 					var z=$("modal-bg")
 					var y=$("modal-box")
@@ -1520,7 +1520,7 @@ var getDirectory=function(b,a){
 			}).setHeader("Authorization","Bearer "+bearer).send()
 		}else{
 			var r="<h2>Virhe</h2>"
-			r+='<div class="program-desc">Ennen kuin voit siirt‰‰ tallenteita, valitse ensin haluamasi tallenteet listasta.</div>'
+			r+='<div class="program-desc">Ennen kuin voit siirt√§√§ tallenteita, valitse ensin haluamasi tallenteet listasta.</div>'
 			r+='<input type="submit" id="submit-ok" class="button" value="  OK  "> '
 			p.setStyle("display","block")
 			n.setStyle("display","block")
@@ -1546,14 +1546,14 @@ var getDirectory=function(b,a){
 		q+='<div class="program-desc">'
 		q+='Tallenteet tulkitaan samoiksi jos:<br>'
 		q+='<div style="margin: 5px; background-color:#2388C5; padding: 5px;">'
-		q+='nimet ovat samoja ( nimist‰ poistetaan lopusta '+duplicate_name_drop.join(", ")+' ennen vertailua )<br>JA<br>'
+		q+='nimet ovat samoja ( nimist√§ poistetaan lopusta '+duplicate_name_drop.join(", ")+' ennen vertailua )<br>JA<br>'
 		q+='tallenteella on kuvaus<br>JA<br>'
 		q+='kuvaukset ovat samoja ( kuvauksista poistetaan '+duplicate_desc_drop.join(", ")+' tekstit ennen vertailua )'
 		q+='</div>'
-		q+='<br>Kaksoiskappaleet valitaan ja merkit‰‰n punaisella DUP tekstill‰. '
-		q+='Viem‰ll‰ hiiren DUP tekstin p‰‰lle n‰et molempien tallenteiden tiedot ja alkuper‰isen tallenteen nimen tausta muuttuu punaiseksi.<br>'
+		q+='<br>Kaksoiskappaleet valitaan ja merkit√§√§n punaisella DUP tekstill√§. '
+		q+='Viem√§ll√§ hiiren DUP tekstin p√§√§lle n√§et molempien tallenteiden tiedot ja alkuper√§isen tallenteen nimen tausta muuttuu punaiseksi.<br>'
 		q+='<br>'
-		q+='Huom:<br>kaksoiskappale tietoa ei talleteta mihink‰‰n. Tiedot h‰vi‰v‰t jos<br>vaihdat kansiota tai poistut ViihdeX Media Managerista.<br>Kuvaukset h‰vi‰v‰t v‰limuistista vain jos suljet ViihdeX Media Managerin.<br>'
+		q+='Huom:<br>kaksoiskappale tietoa ei talleteta mihink√§√§n. Tiedot h√§vi√§v√§t jos<br>vaihdat kansiota tai poistut ViihdeX Media Managerista.<br>Kuvaukset h√§vi√§v√§t v√§limuistista vain jos suljet ViihdeX Media Managerin.<br>'
 		q+='<div id="duplicate_status" class="hide">'
 		q+='</div>'
 		//q+='<div id="dup_log" style="border: 1px solid black; background-color: white; color: black;"></div>'
@@ -1579,7 +1579,7 @@ var getDirectory=function(b,a){
 			new Event(s).stop()
 			btn_cancel.setProperty("disabled","disabled")
 			btn_search.setProperty("disabled","disabled")
-			$('duplicate_status').setHTML('<br><b>J‰rjestet‰‰n...</b><br>');
+			$('duplicate_status').setHTML('<br><b>J√§rjestet√§√§n...</b><br>');
 			$('duplicate_status').removeClass('hide');
 			var t = setTimeout( 'allRecordsLoaded()', 50 );
 		});
@@ -1588,15 +1588,15 @@ var getDirectory=function(b,a){
 	$("add-folder").removeEvents()
 	$("add-folder").addEvent("click",function(r){
 		new Event(r).stop()
-		$("status").setHTML("Uuden kansion lis‰‰minen")
+		$("status").setHTML("Uuden kansion lis√§√§minen")
 		var n=$("modal-bg")
 		var m=$("modal-box")
-		var q="<h2>Uuden kansion lis‰‰minen</h2>"
+		var q="<h2>Uuden kansion lis√§√§minen</h2>"
 		q+='<div class="program-desc">'
-		q+="<b>Lis‰‰ kansio:</b><br><br>"
+		q+="<b>Lis√§√§ kansio:</b><br><br>"
 		q+='<input type="text" id="new-folder" class="input" maxlength="64">'
-		q+="<br><br>Uusi kansio lis‰t‰‰n alikansioksi nykyiseen kansioon.</div>"
-		q+='<input type="submit" id="submit-new-folder" class="button" value="Lis‰‰"> '
+		q+="<br><br>Uusi kansio lis√§t√§√§n alikansioksi nykyiseen kansioon.</div>"
+		q+='<input type="submit" id="submit-new-folder" class="button" value="Lis√§√§"> '
 		q+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
 		n.setStyle("display","block")
 		m.setStyle("display","block")
@@ -1686,7 +1686,7 @@ var getDirectory=function(b,a){
 								p+='<th class="disable-sorting"><input type="checkbox" id="select-all" onClick="toggleMassButtons(id);" class="checkbox"></th>'
 							p+='<th axis="string">Tallenne</th>'
 							p+='<th axis="string">Kanava</th>'
-							p+='<th axis="custom">L‰hetysaika</th>'
+							p+='<th axis="custom">L√§hetysaika</th>'
 							p+='<th axis="string">Tila</th>'
 							p+='<th class="disable-sorting">Kansio</th>'
 							p+='<th class="disable-sorting">Toiminnot</th>'
@@ -1777,7 +1777,7 @@ var getDirectory=function(b,a){
 									p+='<td id="viewcount'+u+'">'+getViewCountString(r,u)+' haku </td>'
 									p+="<td>"+v+"</td>"
 									p+="<td>"
-									p+='<span id="program'+u+'move" pid="program'+s+'move" onClick="moveProgram(pid);" class="link">Siirr‰</span>&nbsp;&nbsp;&nbsp;'
+									p+='<span id="program'+u+'move" pid="program'+s+'move" onClick="moveProgram(pid);" class="link">Siirr√§</span>&nbsp;&nbsp;&nbsp;'
 									if( v_ == trash_bin_folder_id )
 										p+='<span id="program'+u+'delete" pid="program'+s+'delete" onClick="deleteProgram(id, pid);" class="link">Poista</span>&nbsp;&nbsp;&nbsp;'
 									else
@@ -1798,7 +1798,7 @@ var getDirectory=function(b,a){
 								if(t==0)
 								{
 									$("status").setHTML("OK, haku suoritettu")
-									p+="Annetulla hakusanalla ei lˆytynyt tallenteita"
+									p+="Annetulla hakusanalla ei l√∂ytynyt tallenteita"
 								}
 								y.innerHTML=p
 								if(t!=0)
@@ -1860,7 +1860,7 @@ var getSingleChannelGuide=function(b)
 						if(g.channels[b].hasOwnProperty(j)){
 							if(g.channels[b][j].length==0){
 								z+='<div class="channelset-frame">'
-								z+="Kanavalle ei lˆytynyt ohjelmatietoja. Todenn‰kˆisin syy on, ett‰ kanavalla ei ole l‰hiaikoina l‰hetyst‰."
+								z+="Kanavalle ei l√∂ytynyt ohjelmatietoja. Todenn√§k√∂isin syy on, ett√§ kanavalla ei ole l√§hiaikoina l√§hetyst√§."
 								z+="</div>"}
 							for(i=0;i<g.channels[b][j].length;i++){
 								var q=g.channels[b][j][i].id
@@ -1897,7 +1897,7 @@ var getSingleChannelGuide=function(b)
 									z+='<div class="channel-div">'
 									if(l==""&&v==getToday())
 									{
-										z+="<b>T‰n‰‰n - "+getWeekday(d[2],d[1],d[0])+" "+v+"</b><br>"
+										z+="<b>T√§n√§√§n - "+getWeekday(d[2],d[1],d[0])+" "+v+"</b><br>"
 									}
 									else
 									{
@@ -1960,7 +1960,7 @@ var getGuide=function(){
 			h+='<option value="top">Suosituimmat ohjelmat</option>'
 			h+="</select>"
 			h+="&nbsp;&nbsp;&nbsp;"
-			h+='<span class="epg-rec no-link">Vihre‰</span> = kerran tallentuva ohjelma, '
+			h+='<span class="epg-rec no-link">Vihre√§</span> = kerran tallentuva ohjelma, '
 			h+='<span class="epg-rec-wildcard no-link">punainen</span> = aina tallentuva ohjelma'
 			$("guide-menu").innerHTML=h
 			var k=$("dropdown-channels")
@@ -2044,7 +2044,7 @@ var refreshGuide=function(b){
 						if(g.channels[A].hasOwnProperty(j)){
 							if(g.channels[A][j].length==0){
 								z+='<div class="channelset-frame">'
-								z+="Kanavalle ei lˆytynyt ohjelmatietoja. Todenn‰kˆisin syy on, ett‰ kanavalla ei ole l‰hiaikoina l‰hetyst‰."
+								z+="Kanavalle ei l√∂ytynyt ohjelmatietoja. Todenn√§k√∂isin syy on, ett√§ kanavalla ei ole l√§hiaikoina l√§hetyst√§."
 								z+="</div>"}
 							for(i=0;i<g.channels[A][j].length;i++){
 								var q=g.channels[A][j][i].id
@@ -2069,7 +2069,7 @@ var refreshGuide=function(b){
 										z+='<div class="channelset-frame">'}
 									z+='<div class="channel-div">'
 									if(l==""&&v==getToday()){
-										z+="<b>T‰n‰‰n - "+getWeekday(d[2],d[1],d[0])+" "+v+"</b><br>"
+										z+="<b>T√§n√§√§n - "+getWeekday(d[2],d[1],d[0])+" "+v+"</b><br>"
 									}else{
 										z+="<b>"+getWeekday(d[2],d[1],d[0])+" "+v+"</b><br>"}}
 								var r=""
@@ -2176,7 +2176,7 @@ var getGuideAll=function(c,b){
 				if(i==0){
 					if(d==""){
 						D=D+" active-link"}
-					J+='<span weekday="'+v+'" onClick="getGuideAll2(weekday, \'\');" class="'+D+'">T‰n‰‰n - '+m+"</span>&nbsp;&nbsp;&nbsp;&nbsp;"
+					J+='<span weekday="'+v+'" onClick="getGuideAll2(weekday, \'\');" class="'+D+'">T√§n√§√§n - '+m+"</span>&nbsp;&nbsp;&nbsp;&nbsp;"
 				}else{
 					J+='<span weekday="'+v+'" onClick="getGuideAll2(weekday, \'\');" class="'+D+'">'+m+"</span>&nbsp;&nbsp;&nbsp;&nbsp;"}}
 			J+="</div>"
@@ -2296,7 +2296,7 @@ var getGuideTop=function(b){
 			$("status").setHTML(k)
 			var h=""
 			h+='<div class="channelset-frame">'
-			h+="Suosituimmat ohjelmat, jotka myˆs muut Viihteen k‰ytt‰j‰t ovat laittaneet tallentumaan.<br><br>"
+			h+="Suosituimmat ohjelmat, jotka my√∂s muut Viihteen k√§ytt√§j√§t ovat laittaneet tallentumaan.<br><br>"
 			for(i=0;i<j.programs.length;i++){
 				var f=j.programs[i].program_id
 				var d=j.programs[i].name
@@ -2323,7 +2323,7 @@ var getGuideTop=function(b){
 					h+='<th axis="number" class="no-sorting">#</th>'
 					h+='<th class="no-sorting">Ohjelma</th>'
 					h+='<th class="no-sorting">Kanava</th>'
-					h+='<th class="no-sorting">L‰hetysaika</th>'
+					h+='<th class="no-sorting">L√§hetysaika</th>'
 					h+="</thead>"
 					h+="<tbody>"}
 				h+="<tr>"
@@ -2464,13 +2464,13 @@ var showDetailsEPG=function(p,u,n,v,r,m,c){
 	s+='<div class="program-desc" id="program-desc">'+r+"</div>"
 	s+='<div id="record-dropdown"></div>'
 	if(m=="true"&&c!="true"){
-		s+='<input type="submit" id="submit-delete-record" class="button" value="Poista tallennuspyyntˆ"> '}
+		s+='<input type="submit" id="submit-delete-record" class="button" value="Poista tallennuspyynt√∂"> '}
 	if(m!="true"){
 		s+='<input type="submit" id="confirm-add-record" class="button" value="Tallenna"> '}
 	if(c=="true"){
-		s+='<input type="submit" id="submit-delete-wildcard" url="" class="button" value="Poista &quot;aina tallentuva&quot; -s‰‰ntˆ">'
+		s+='<input type="submit" id="submit-delete-wildcard" url="" class="button" value="Poista &quot;aina tallentuva&quot; -s√§√§nt√∂">'
 	}else{
-		s+='<input type="submit" id="confirm-add-wildcard" url="" class="button" value="Lis‰‰ aina tallentuvaksi">'}
+		s+='<input type="submit" id="confirm-add-wildcard" url="" class="button" value="Lis√§√§ aina tallentuvaksi">'}
 	var f=$("modal-bg")
 	var q=$("modal-box")
 	f.setStyle("display","block")
@@ -2518,7 +2518,7 @@ var showDetailsEPG=function(p,u,n,v,r,m,c){
 							stopLoading()
 							$("program"+p+"details").setProperty("class","epg-link")
 							$("program"+p+"details").setProperty("recorded","false")
-							$("status").setHTML("OK, tallennuspyyntˆ poistettu")}
+							$("status").setHTML("OK, tallennuspyynt√∂ poistettu")}
 					}).send()}
 			}).send()}
 		)}
@@ -2561,12 +2561,12 @@ var showDetailsEPG=function(p,u,n,v,r,m,c){
 			x+=' <select class="select" id="dropdown-record3">'
 			x+='<option value="none">'+l+"</option>"
 			x+="</select>"
-			x+="<br><br>Kohdekansiovalikko tukee vain kolmen tason alikansiopuuta, joten syvemm‰ll‰ olevia alikansioita ei voi k‰ytt‰‰ t‰ll‰ sovelluksella."
+			x+="<br><br>Kohdekansiovalikko tukee vain kolmen tason alikansiopuuta, joten syvemm√§ll√§ olevia alikansioita ei voi k√§ytt√§√§ t√§ll√§ sovelluksella."
 			x+="</div>"
 			x+='<div class="program-desc" id="wildcard-field">'
 			x+="<b>Avainsana, jonka perusteella tallennetaan:</b><br><br>"
 			x+='<input type="text" class="input-wildcard" id="wildcard">'
-			x+='<br><br>Voit k‰ytt‰‰ ohjelman nimess‰ *-merkki‰ jokerimerkkin‰, jos haluat tallentaa vain ohjelman nimen osalla. Esimerkiksi s‰‰ntˆ <b>el‰in*</b> tallentaa kaikki ohjelmat, jotka alkavat sanalla "el‰in", esim. El‰insairaala ja El‰inten tahdissa.'
+			x+='<br><br>Voit k√§ytt√§√§ ohjelman nimess√§ *-merkki√§ jokerimerkkin√§, jos haluat tallentaa vain ohjelman nimen osalla. Esimerkiksi s√§√§nt√∂ <b>el√§in*</b> tallentaa kaikki ohjelmat, jotka alkavat sanalla "el√§in", esim. El√§insairaala ja El√§inten tahdissa.'
 			x+="</div>"
 			$("record-dropdown").innerHTML=x
 			$("wildcard").setProperty("value",j)
@@ -2665,9 +2665,9 @@ var showDetailsEPG=function(p,u,n,v,r,m,c){
 						if(D){
 							$("program"+p+"details").setProperty("class","epg-rec")
 							$("program"+p+"details").setProperty("recorded","true")
-							$("status").setHTML("OK, tallennuspyyntˆ lis‰tty")
+							$("status").setHTML("OK, tallennuspyynt√∂ lis√§tty")
 						}else{
-							$("status").setHTML("Tallennuspyynnˆn lis‰‰minen ep‰onnistui, todenn‰kˆisesti ohjelma on jo p‰‰ttynyt")}
+							$("status").setHTML("Tallennuspyynn√∂n lis√§√§minen ep√§onnistui, todenn√§k√∂isesti ohjelma on jo p√§√§ttynyt")}
 						destination=""}
 				}).send()
 			})
@@ -2700,7 +2700,7 @@ var showDetailsEPG=function(p,u,n,v,r,m,c){
 							var G="add"
 							refreshGuide(G)
 						}else{
-							$("status").setHTML("Tallennuspyynnˆn lis‰‰minen ep‰onnistui, todenn‰kˆisesti ohjelman nimess‰ on erikoismerkkej‰ (korvaa ne *-merkill‰)")}}
+							$("status").setHTML("Tallennuspyynn√∂n lis√§√§minen ep√§onnistui, todenn√§k√∂isesti ohjelman nimess√§ on erikoismerkkej√§ (korvaa ne *-merkill√§)")}}
 				}).send()
 			})
 		})}
@@ -2740,7 +2740,7 @@ var showDetailsEPG=function(p,u,n,v,r,m,c){
 							var G="add"
 							refreshGuide(G)
 						}else{
-							$("status").setHTML("Tallennuspyynnˆn lis‰‰minen ep‰onnistui, todenn‰kˆisesti ohjelman nimess‰ on erikoismerkkej‰ (korvaa ne *-merkill‰)")}}
+							$("status").setHTML("Tallennuspyynn√∂n lis√§√§minen ep√§onnistui, todenn√§k√∂isesti ohjelman nimess√§ on erikoismerkkej√§ (korvaa ne *-merkill√§)")}}
 				}).send()
 			})
 		})}}
@@ -2935,9 +2935,9 @@ var loadSettings=function()
 var childModeClicked=function()
 {
 	if( SETTINGS_child_mode == 0 )
-		showChildModeChangeDialog('Lapsitila p‰‰lle', 1);
+		showChildModeChangeDialog('Lapsitila p√§√§lle', 1);
 	else
-		showChildModeChangeDialog('Lapsitila pois p‰‰lt‰', 0);
+		showChildModeChangeDialog('Lapsitila pois p√§√§lt√§', 0);
 }
 
 
@@ -2947,7 +2947,7 @@ var showChildModeChangeDialog=function(title, new_child_mode)
 	content+='<div class="program-desc">'
 	content+="<b>Anna pin koodi</b><br><br>"
 	content+='<input id="child_pin" type="text" size="4" maxlength="4" onKeyPress="return isNumber(event);">'
-	content+=' <span id="child_pin_error" class="hide" style="color: #ffdddd;">v‰‰r‰ pin koodi</span><br><br>'
+	content+=' <span id="child_pin_error" class="hide" style="color: #ffdddd;">v√§√§r√§ pin koodi</span><br><br>'
 	if( new_child_mode == 1 && SETTINGS_child_pin_value == default_pin_code ) content+='Voit vaihtaa PIN-koodin asetuksista (oletus koodi on '+default_pin_code+').';
 	content+="</div>"
 	content+='<input type="submit" id="submit-ok" class="button" value="Ok"> '
@@ -2997,7 +2997,7 @@ var childModeSet=function(new_mode)
 {
 	if( new_mode == 0 )
 	{
-		$("childmode").setHTML( 'p‰‰lle' );
+		$("childmode").setHTML( 'p√§√§lle' );
 		SETTINGS_child_mode = 0
 		getDirectory("folder-root","");
 		$("menu_content").removeClass("hide");
@@ -3150,7 +3150,7 @@ var showSettings=function(){
 			f+="</select>"
 			f+="<br><br>VLC:n tekstityskieli<br>";
 			var sub_language_values = [ "off",         "fin",	"dut" ];
-			var sub_language_texts =  [ "Pois p‰‰lt‰", "suomi",	"hollanti" ];
+			var sub_language_texts =  [ "Pois p√§√§lt√§", "suomi",	"hollanti" ];
 			f+='<select class="select" id="dropdown-subtitles-list">'
 			for( i=0; i<sub_language_values.length; i++ )
 			{
@@ -3172,9 +3172,9 @@ var showSettings=function(){
 			f+='>Tallenna ladattavan tallenteen kuvaus tekstitiedostoon<br>'
 			f+='<div>'
 			f+="<br><b>Kaksoiskappaleiden haku</b><br>"
-			f+="J‰rjestys:<br>";
+			f+="J√§rjestys:<br>";
 			var dup_sort_order_values = [ "ASC",         "DESC"   ];
-			var dup_sort_order_texts =  [ "Vanhempi alkuper‰iseksi", "Uudempi alkuper‰iseksi" ];
+			var dup_sort_order_texts =  [ "Vanhempi alkuper√§iseksi", "Uudempi alkuper√§iseksi" ];
 			f+='<select class="select" id="dropdown-dup-sort-order-list">'
 			for( i=0; i<dup_sort_order_values.length; i++ )
 			{
@@ -3195,9 +3195,9 @@ var showSettings=function(){
 			else
 				f+='<option value="0">Kansioiden joukossa</option>'
 			if( SETTINGS_trash_bin_position == 1 )
-				f+='<option value="1" selected>Viimeisen‰</option>'
+				f+='<option value="1" selected>Viimeisen√§</option>'
 			else
-				f+='<option value="1">Viimeisen‰</option>'
+				f+='<option value="1">Viimeisen√§</option>'
 			f+="</select>"
 			f+="</div>";
 
@@ -3343,7 +3343,7 @@ var showSettings=function(){
 					var v = leaveOnlyNumbers( $('child_pin_code').value );
 					if( v.length != 4 )
 					{
-						$('child_pin_code_error').setHTML('Pin-koodin tulee olla nelj‰ numeroa');
+						$('child_pin_code_error').setHTML('Pin-koodin tulee olla nelj√§ numeroa');
 						$('child_pin_code').value = '';
 					}
 					else
@@ -3368,7 +3368,7 @@ var deleteProgram=function(h,g)
 	var d="<h2>Tallenteen poistaminen</h2>"
 	d+='<div class="program-desc">'
 	d+='<img src="images/icon-important.png" style="float: left; margin-right: 20px;">';
-	d+='<br>Haluatko varmasti poistaa tallenteen?<br>Poistamisen j‰lkeen tallennetta ei ole en‰‰ mahdollista palauttaa.</div>'
+	d+='<br>Haluatko varmasti poistaa tallenteen?<br>Poistamisen j√§lkeen tallennetta ei ole en√§√§ mahdollista palauttaa.</div>'
 	d+='<input type="submit" id="submit-delete" class="button" value="Poista"> '
 	d+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
 	var b=$("modal-bg")
@@ -3422,12 +3422,12 @@ var moveProgramToTrashBin=function(d,c){
 			{
 				$("program"+d+"row").removeClass("active-row");
 				$("status").setHTML("OK")
-				alert('Ei roskakoria!\nKansiota "'+SETTINGS_trash_bin_name+'" ei lˆydy.');
+				alert('Ei roskakoria!\nKansiota "'+SETTINGS_trash_bin_name+'" ei l√∂ydy.');
 				return;
 			}
 			var j="<h2>Tallenteen poistaminen roskakoriin</h2>"
 			j+='<div class="program-desc">'
-			j+="<b>Haluatko varmasti poistaa tallenteen? Poistamisen j‰lkeen tallenteen lˆyt‰‰ roskakorista.</b><br><br>"
+			j+="<b>Haluatko varmasti poistaa tallenteen? Poistamisen j√§lkeen tallenteen l√∂yt√§√§ roskakorista.</b><br><br>"
 			j+="</div>"
 			j+='<input type="submit" id="submit-move" class="button" value="Poista"> '
 			j+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
@@ -3498,10 +3498,10 @@ var moveProgram=function(c){
 	var b=new Json.Remote("https://api-viihde-gateway.dc1.elisa.fi/rest/npvr/folders?v=2.1&platform=ios&appVersion=1.0",{
 		method:"GET",onRequest:showLoadingFolderList,onComplete:function(n){
 			stopLoading()
-			$("status").setHTML("Tallenteen siirt‰minen")
-			var j="<h2>Tallenteen siirt‰minen</h2>"
+			$("status").setHTML("Tallenteen siirt√§minen")
+			var j="<h2>Tallenteen siirt√§minen</h2>"
 			j+='<div class="program-desc">'
-			j+="<b>Siirr‰ kansioon:</b><br><br>"
+			j+="<b>Siirr√§ kansioon:</b><br><br>"
 			j+='<select class="select" id="dropdown-move">'
 			j+='<option value="none">'+a+"</option>"
 			j+='<option value="0">(oletus)</option>'
@@ -3521,9 +3521,9 @@ var moveProgram=function(c){
 			j+=' <select class="select" id="dropdown-move3">'
 			j+='<option value="none">'+a+"</option>"
 			j+="</select>"
-			j+="<br><br>Siirton‰kym‰ tukee vain kolmen tason alikansiopuuta, joten syvemm‰ll‰ olevia alikansioita ei voi k‰ytt‰‰ t‰ll‰ sovelluksella."
+			j+="<br><br>Siirton√§kym√§ tukee vain kolmen tason alikansiopuuta, joten syvemm√§ll√§ olevia alikansioita ei voi k√§ytt√§√§ t√§ll√§ sovelluksella."
 			j+="</div>"
-			j+='<input type="submit" id="submit-move" class="button" value="Siirr‰" disabled> '
+			j+='<input type="submit" id="submit-move" class="button" value="Siirr√§" disabled> '
 			j+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
 			var l=$("modal-bg")
 			var k=$("modal-box")
@@ -3796,10 +3796,10 @@ var toggleMassButtons=function(f,d){
 }
 //------------------------------------------------------------------------------
 var editFolder=function(h,b){
-	$("status").setHTML("Kansion uudelleennime‰minen")
+	$("status").setHTML("Kansion uudelleennime√§minen")
 	var h=h.replace(/\D/g,"")
 	$("folder"+h+"row").addClass("active-row")
-	var g="<h2>Kansion uudelleennime‰minen</h2>"
+	var g="<h2>Kansion uudelleennime√§minen</h2>"
 	g+='<div class="program-desc">'
 	g+="<b>Kansion nimi:</b><br><br>"
 	g+='<input type="text" id="new-name" class="input" value="'+b+'" maxlength="64">'
@@ -3846,7 +3846,7 @@ var deleteFolder=function(g){
 	var d="<h2>Kansion poistaminen</h2>"
 	d+='<div class="program-desc">'
 	d+='<img src="images/icon-important.png" style="float: left; margin-right: 20px;">';
-	d+= 'Haluatko varmasti poistaa kansion?<br>Poistamisen j‰lkeen myˆs kaikki kansiossa olevat alikansiot ja tallenteet menetet‰‰n,<br>eik‰ tallenteita ole poistamisen j‰lkeen en‰‰ mahdollista palauttaa.</div>'
+	d+= 'Haluatko varmasti poistaa kansion?<br>Poistamisen j√§lkeen my√∂s kaikki kansiossa olevat alikansiot ja tallenteet menetet√§√§n,<br>eik√§ tallenteita ole poistamisen j√§lkeen en√§√§ mahdollista palauttaa.</div>'
 	d+='<input type="submit" id="submit-delete" class="button" value="Poista"> '
 	d+='<input type="submit" id="submit-cancel" class="button" value="Peruuta">'
 	var b=$("modal-bg")
@@ -3915,7 +3915,7 @@ var showViihde=function(){
 	if( SETTINGS_child_mode == 1 )
 		a+='pois'
 	else
-		a+='p‰‰lle'
+		a+='p√§√§lle'
 	a+='</span></span></label>'
 	a+="</div>"
 	a+="</div>"
@@ -3930,11 +3930,11 @@ var showViihde=function(){
 		a+='<div id="menu_content" class="hide">'
 	else
 		a+='<div id="menu_content">'
-	a+='<input type="submit" value="Siirr‰ valitut" id="mass-move" class="button"> '
+	a+='<input type="submit" value="Siirr√§ valitut" id="mass-move" class="button"> '
 	a+='<input type="submit" value="Poista valitut" id="mass-delete" class="button"> '
-	a+='<input type="submit" value="Lis‰‰ uusi kansio" id="add-folder" class="button"> '
+	a+='<input type="submit" value="Lis√§√§ uusi kansio" id="add-folder" class="button"> '
 	a+='<input type="submit" value="Kaksoiskappaleiden haku" id="find-duplicates" class="button"> '
-	a+='<input type="submit" value="Tyhjenn‰ roskakori" id="empty-trash-bin" class="button hide"> '
+	a+='<input type="submit" value="Tyhjenn√§ roskakori" id="empty-trash-bin" class="button hide"> '
 	a+='<div id="search-area">'
 	a+='<div class="input-title">Hae tallenteista:</div> '
 	a+='<input type="text" id="query" class="input"> '
@@ -3957,7 +3957,7 @@ var showViihde=function(){
 	a+='<div class="content-top"></div>'
 	a+='<div class="content">'
 	a+='<div id="login-area">'
-	a+='<div class="input-title">K‰ytt‰j‰tunnus:</div>'
+	a+='<div class="input-title">K√§ytt√§j√§tunnus:</div>'
 	a+='<div class="input-field"><input type="text" id="username" class="input" value=""></div>'
 	a+='<div class="input-title">Salasana:</div>'
 	a+='<div class="input-field"><input type="password" id="password" class="input" value=""></div>'
@@ -3968,7 +3968,7 @@ var showViihde=function(){
 	a+="</div>"
 	a+='<div id="login-hint">'
 	a+="<b>Vastuunrajoitukset / Disclaimer</b><br><br>"
-	a+='Elisa Viihde Media Manager ei ole Elisan tarjoama tai tukema sovellus. Kyseess‰ on harrastusprojekti, josta on toivottavasti iloa ja apua Elisa Viihde -palvelun k‰ytt‰jille tallenteiden hallinnoimisessa. Sovellus on testattu ja todettu t‰ysin toimivaksi, mutta virhetilanteita saattaa siit‰ huolimatta synty‰. Sovellus tarjotaan sellaisenaan ilman mink‰‰nlaista takuuta ja sovelluksen k‰yttˆ on t‰ysin omalla vastuullasi. Lis‰tietoja sovelluksen juurihakemistossa olevassa LUEMINUT.txt -tiedostossa. Kehitysehdotuksia ja palautetta voit antaa <span url="http://yhteiso.elisa.fi/t5/Elisa-Viihde-Ominaisuudet-ja/ViihdeX-Media-Manager-Tallenteiden-hallinta-Windowsille/m-p/188707" onClick="openURL(url);" class="web-link viihde">Elisa Palstalla</span>.'
+	a+='Elisa Viihde Media Manager ei ole Elisan tarjoama tai tukema sovellus. Kyseess√§ on harrastusprojekti, josta on toivottavasti iloa ja apua Elisa Viihde -palvelun k√§ytt√§jille tallenteiden hallinnoimisessa. Sovellus on testattu ja todettu t√§ysin toimivaksi, mutta virhetilanteita saattaa siit√§ huolimatta synty√§. Sovellus tarjotaan sellaisenaan ilman mink√§√§nlaista takuuta ja sovelluksen k√§ytt√∂ on t√§ysin omalla vastuullasi. Lis√§tietoja sovelluksen juurihakemistossa olevassa LUEMINUT.txt -tiedostossa. Kehitysehdotuksia ja palautetta voit antaa <span url="http://yhteiso.elisa.fi/t5/Elisa-Viihde-Ominaisuudet-ja/ViihdeX-Media-Manager-Tallenteiden-hallinta-Windowsille/m-p/188707" onClick="openURL(url);" class="web-link viihde">Elisa Palstalla</span>.'
 	a+="</div>"
 	a+="</div>"
 	a+='<div class="content-bottom"></div>'
@@ -4066,7 +4066,7 @@ var showViihde=function(){
 							{
 								$("username").value=""
 								$("password").value=""
-								$("status").setHTML("Kirjautuminen ep‰onnistui, k‰ytt‰j‰tunnus tai salasana oli virheellinen")
+								$("status").setHTML("Kirjautuminen ep√§onnistui, k√§ytt√§j√§tunnus tai salasana oli virheellinen")
 							}
 						}
 					}).setHeader("Content-Type","application/x-www-form-urlencoded").send("username="+l+"&password="+j+"&grant_type=authorization_code&client_id=external&code="+A.code)}
