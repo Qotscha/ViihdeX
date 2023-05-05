@@ -1,5 +1,5 @@
-v. 1.5.1X1.5.q5.4
-- Lis‰tty "UUSI KAUSI.", "TV-ENSI-ILTA!" ja "SUOMEN-ENSI-ILTA" duplikaattihaussa kuvauksista poistettaviin ilmauksiin
+v. 1.5.1X1.5.q5.4 (6.5.2023)
+- Lis‰tty "UUSI KAUSI.", "TV-ENSI-ILTA!", "SUOMEN TV-ENSI-ILTA", "SUOMEN ENSI-ILTA" ja "SUOMEN-ENSI-ILTA" duplikaattihaussa kuvauksista poistettaviin ilmauksiin
 
 v 1.5.1X1.5.q5.3 (2.6.2021)
 - Lis‰tty mahdollisuus valita lataajaksi FFmpeg, Streamlink, VLC tai youtube-dl (HUOM. erillisi‰ tekstityksi‰ tai vaihtoehtoisia ‰‰niraitoja EI ladata)
