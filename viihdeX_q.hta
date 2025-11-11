@@ -16,7 +16,7 @@
 			icon="images/favicon.ico"
 			/>
 
-		<title>Elisa ViihdeX Media Manager v1.5.1X1.5.q5.4</title>
+		<title>Elisa ViihdeX Media Manager v1.5.1X1.5.q5.5</title>
 		<link rel="stylesheet" type="text/css" href="css/styles.css">
 		<link rel="stylesheet" type="text/css" href="css/sortableTable.css">
 		<script type="text/javascript" src="js/mootools.js"></script>
@@ -3636,7 +3636,7 @@ var loadMPC=function(j, download){
 
 	if ( download || SETTINGS_player == 'mpc-hc')
 	{
-		var b=new Json.Remote("https://watchable-api.dc.elisa.fi/V3/recordings/play-options/"+j+"/ios",{ method:"POST",onRequest:function(){showLoadingMPC(download)},onComplete:function(k)
+		var b=new Json.Remote("https://viihde-watchable-api-prod.csf.elisa.fi/V5/recordings/play-options/"+j+"/ios",{ method:"POST",onRequest:function(){showLoadingMPC(download)},onComplete:function(k)
 			{
 				stopLoading()
 				$("status").setHTML("OK")
@@ -3698,7 +3698,7 @@ var loadMPC=function(j, download){
 	}
 	else
 	{
-		var b=new Json.Remote("https://watchable-api.dc.elisa.fi/V3/recordings/play-options/"+j+"/ios",{ method:"POST",onRequest:function(){showLoadingMPC(download)},onComplete:function(k)
+		var b=new Json.Remote("https://viihde-watchable-api-prod.csf.elisa.fi/V5/recordings/play-options/"+j+"/ios",{ method:"POST",onRequest:function(){showLoadingMPC(download)},onComplete:function(k)
 			{
 				stopLoading()
 				$("status").setHTML("OK")
