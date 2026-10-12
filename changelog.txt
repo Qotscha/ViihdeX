@@ -1,3 +1,6 @@
+v. 1.5.1X1.5.q6.0 (13.10.2026)
+- Lataukset suoritetaan DASH-protokollaa käyttäen
+
 v. 1.5.1X1.5.q5.5 (11.11.2025)
 - Korjattu tallenteiden lataus ja katselu
 

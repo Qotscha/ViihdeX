@@ -4,7 +4,7 @@ Yleistä:
   pohjautuvasta Elisa ViihdeX Media Manager v1.5.1X1.5:stä (kehittäjät jila ja puje,
   https://yhteiso.elisa.fi/elisa-viihde-sovellus-ja-nettipalvelu-16/viihdex-media-manager-tallenteiden-hallinta-windowsille-188707).
 - Sovelluksen viihdeX_q.hta avulla voi katsoa ja ladata Elisa Viihteen tallenteita.
-- Pakettiin sisältyy lataukseen tarvittava ViihdeX-dl (python-skripti ja stand-alone exe).
+- Pakettiin sisältyy lataukseen tarvittava ViihdeXDASH (python-skripti ja stand-alone exe).
 - Ohjelmaopas ei toimi.
 
 KOODISSA NÄKYVÄN API-KEYN KÄYTTÖ MUISSA YHTEYKSISSÄ ON EHDOTTOMASTI KIELLETTY!

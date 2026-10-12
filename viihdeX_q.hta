@@ -16,7 +16,7 @@
 			icon="images/favicon.ico"
 			/>
 
-		<title>Elisa ViihdeX Media Manager v1.5.1X1.5.q5.5</title>
+		<title>Elisa ViihdeX Media Manager v1.5.1X1.5.q6.0</title>
 		<link rel="stylesheet" type="text/css" href="css/styles.css">
 		<link rel="stylesheet" type="text/css" href="css/sortableTable.css">
 		<script type="text/javascript" src="js/mootools.js"></script>
@@ -243,10 +243,10 @@ var showLoadingMassDelete=function(){
 var showLoadingMPC=function(download){
 	if (download)
 	{
-		if (SETTINGS_downloader == 'viihdex-dl_py')
-			$("status").setHTML('Aloitetaan tallenteen lataus Viihdex-dl:llä<span id="loading"></span>')
-		else if (SETTINGS_downloader == 'viihdex-dl')
-			$("status").setHTML('Aloitetaan tallenteen lataus Viihdex-dl:llä<span id="loading"></span>')
+		if (SETTINGS_downloader == 'viihdexdash_py')
+			$("status").setHTML('Aloitetaan tallenteen lataus ViihdeXDASHilla:llä<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'viihdexdash')
+			$("status").setHTML('Aloitetaan tallenteen lataus ViihdeXDASHilla<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'ffmpeg')
 			$("status").setHTML('Aloitetaan tallenteen lataus FFmpeg:llä<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'streamlink')
@@ -2896,7 +2896,7 @@ var loadSettings=function()
 		SETTINGS_player = s_player;
 
 	if( s_downloader == undefined )
-		SETTINGS_downloader = 'viihdex-dl';
+		SETTINGS_downloader = 'viihdexdash';
 	else
 		SETTINGS_downloader = s_downloader;
 
@@ -3123,8 +3123,8 @@ var showSettings=function(){
 
 			f+='<br><div style="float: right;">'
 			f+="<br><b>Lataaja</b><br>";
-			var downloader_values = [ "viihdex-dl", "viihdex-dl_py", "curl", "ffmpeg", "streamlink", "youtube-dl", "vlc" ];
-			var downloader_texts =  [ "ViihdeX-dl (.exe)", "ViihdeX-dl (.py)", "curl (.m3u8)", "FFmpeg (EI TEKST.)", "Streamlink (EI TEKST.)", "youtube-dl (EI TEKST.)", "VLC (EI TEKST.)" ];
+			var downloader_values = [ "viihdexdash", "viihdexdash_py", "curl", "ffmpeg", "streamlink", "youtube-dl", "vlc" ];
+			var downloader_texts =  [ "ViihdeXDASH (.exe)", "ViihdeXDASH (.py)", "curl (.m3u8)", "FFmpeg (EI TEKST.)", "Streamlink (EI TEKST.)", "youtube-dl (EI TEKST.)", "VLC (EI TEKST.)" ];
 			f+='<select class="select" id="dropdown-downloader-list">'
 			for( i=0; i<downloader_values.length; i++ )
 			{
@@ -3650,18 +3650,18 @@ var loadMPC=function(j, download){
 					var description = $('download_description').innerHTML
 					h = path+"\\"+file_name
 					if ( SETTINGS_external_subtitles )
-						dl_o = ' -e'
+						dl_o = ' -e -c dlsettings.ini'
 					else
 						dl_o = ''
-					if( SETTINGS_downloader == 'viihdex-dl_py' )
+					if( SETTINGS_downloader == 'viihdexdash_py' )
 						try {
-							w.run('py ViihdeX-dl.py '+l+' "'+h+'"'+dl_o)
+							w.run('py viihdexdash.py '+l+' "'+h+'"'+dl_o)
 						}
 						catch(err) {
-							w.run('python ViihdeX-dl.py '+l+' "'+h+'"'+dl_o)
+							w.run('python viihdexdash.py '+l+' "'+h+'"'+dl_o)
 						}
-					else if ( SETTINGS_downloader == 'viihdex-dl' )
-						w.run('ViihdeX-dl '+l+' "'+h+'"'+dl_o)
+					else if ( SETTINGS_downloader == 'viihdexdash' )
+						w.run('viihdexdash '+l+' "'+h+'"'+dl_o)
 					else if( SETTINGS_downloader == 'vlc' )
 					{
 						var c='"'+vlcGetPath()+'"'
@@ -3694,7 +3694,7 @@ var loadMPC=function(j, download){
 				}
 				else if( SETTINGS_player == 'mpc-hc' )
 					w.run("run_mpc-hc.vbs "+l)
-			}}).setHeader("content-type", "application/json; charset=UTF-8").setHeader("Authorization","Bearer "+bearer).send('{"cdnServiceOptions":["s_ttml"],"protocol":"hls","applicationVersion":"1","deviceId":"123","drmPlatform":"ios"}')
+			}}).setHeader("content-type", "application/json; charset=UTF-8").setHeader("Authorization","Bearer "+bearer).send('{"cdnServiceOptions":["s_ttml","v_prefer_hevc"],"protocol":"dash","applicationVersion":"1","deviceId":"123","drmPlatform":"ios"}')
 	}
 	else
 	{
@@ -3719,7 +3719,7 @@ var loadMPC=function(j, download){
 					w.run("run_mpc-be_hls.vbs "+l)
 
 
-			}}).setHeader("content-type", "application/json; charset=UTF-8").setHeader("Authorization","Bearer "+bearer).send('{"cdnServiceOptions":["s_ttml"],"protocol":"dash","applicationVersion":"1","deviceId":"123","drmPlatform":"ios"}')
+			}}).setHeader("content-type", "application/json; charset=UTF-8").setHeader("Authorization","Bearer "+bearer).send('{"cdnServiceOptions":["s_ttml","v_prefer_hevc"],"protocol":"dash","applicationVersion":"1","deviceId":"123","drmPlatform":"ios"}')
 	}
 }
 //------------------------------------------------------------------------------
@@ -3904,7 +3904,7 @@ var selectAll=function(){
 var showViihde=function(){
 	var a=""
 	a+='<div class="container">'
-	a+='<div id="logo-area">X Media Manager v1.5.1X1.5.q5.5'
+	a+='<div id="logo-area">X Media Manager v1.5.1X1.5.q6.0'
 	a+='<div id="navi">'
 	var hide_class = '';
 	if( SETTINGS_child_mode == 1 ) hide_class = ' hide';
