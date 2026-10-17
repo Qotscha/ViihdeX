@@ -125,8 +125,6 @@ def download_sub(name, sub_url, tl):
         r = requests.get(sub_url.replace('$Time$', str(t)))
         frag = r.content.decode(encoding = 'utf-8', errors = 'ignore')
         d = frag.split('mdat', 1)[1]
-        # print(t)
-        # print(d)
         try:
             ttml = DFXPReader().read(d)
         except:
@@ -219,7 +217,6 @@ def main():
     parser.add_argument('-r', '--variant', help='select variant', default=None)
     parser.add_argument('-y', '--overwrite', help='overwrite output files without asking', action='store_true')
     parser.add_argument('-n', '--never', help='never overwrite existing files', action='store_true')
-    # parser.add_argument('-f', '--ffmpeg_options', help='ffmpeg general and input options', default=None)
     args = parser.parse_args()
 
     # Load config
@@ -257,9 +254,6 @@ def main():
     elif args.live_start_index:
         dl_settings['ffmpeg options'] = dl_settings['ffmpeg options'] + ' ' + '-live_start_index ' + args.live_start_index
 
-    # if args.ffmpeg_options:
-        # dl_settings['ffmpeg_options'] = dl_settings['ffmpeg_options'] + ' ' + args.ffmpeg_options
-
     dl_settings['audio languages'] = args.audio if args.audio else dl_settings['audio languages']
     dl_settings['subtitle languages'] = args.subtitles if args.subtitles else dl_settings['subtitle languages']
     to_iso = dl_settings.getboolean('RFC 5646 to ISO 639') if 'RFC 5646 to ISO 639' in dl_settings else True
@@ -281,13 +275,16 @@ def main():
 
     # Parse manifest and create FFmpeg command
     recording_url = get_playlist.url
-    hls_url = recording_url.rsplit('.mpd', 1)[0].rsplit('/', 1)[0]
+    dash_url = recording_url.rsplit('.mpd', 1)[0].rsplit('/', 1)[0]
     av_audio = []
     audio_dict = {}
     audio_count = {}
     audio_metadata = ''
     av_subs = []
     sub_dict = {}
+    sub_inputs = ''
+    sub_metadata = ' -default_mode infer_no_subs' if dl_settings['file extension'] == 'mkv' else ''
+    del_list = []
     wanted_audio = [] if not dl_settings['audio languages'] else [get_language(x.strip()) for x in dl_settings['audio languages'].split(',')]
     wanted_subs = [] if not dl_settings['subtitle languages'] else [get_language(x.strip()) for x in dl_settings['subtitle languages'].split(',')]
     default_audio_list = [] if not dl_settings['default audio'] else [get_language(x.strip()) for x in dl_settings['default audio'].split(',')]
@@ -315,11 +312,10 @@ def main():
                     sub_uri = x.find('mpd:SegmentTemplate', ns).get('media')
                     sub_uri = sub_uri.replace('$RepresentationID$', x.find('mpd:Representation', ns).get('id'))
                     if not (sub_uri.startswith('http://') or sub_uri.startswith('https://')):
-                        sub_uri = hls_url + '/dash/' + sub_uri
+                        sub_uri = dash_url + '/dash/' + sub_uri
                     timeline = x.find('mpd:SegmentTemplate', ns).find('mpd:SegmentTimeline', ns).find('mpd:S', ns).attrib
                     av_subs.append(lang)
                     sub_dict[lang] = [sub_uri, timeline]
-        print(sub_dict)
         if not sub_dict:
             if finnish:
                 print('Tekstityksiä ei löytynyt.')
@@ -342,8 +338,6 @@ def main():
                 for x in rep:
                     bandwidth = int(x.get('bandwidth'))
                     resolution = [int(x.get('width')), int(x.get('height'))]
-                    # print(bandwidth)
-                    # print(resolution)
                     if (args.variant is not None and variant == int(args.variant) or (not args.variant and
                         is_best_variant(bandwidth, resolution[0], resolution[1], max_bw, max_dl_bw, max_dl_width, max_dl_height))):
                         best_variant = variant
@@ -362,7 +356,6 @@ def main():
                         max_height = resolution[1]
                     variant += 1
         mappings = ' -map 0:v:' + str(best_variant)
-        # print(mappings)
 
         for x in aset:
             # Parse available audio tracks
@@ -391,7 +384,7 @@ def main():
                 sub_uri = x.find('mpd:SegmentTemplate', ns).get('media')
                 sub_uri = sub_uri.replace('$RepresentationID$', x.find('mpd:Representation', ns).get('id'))
                 if not (sub_uri.startswith('http://') or sub_uri.startswith('https://')):
-                    sub_uri = hls_url + '/dash/' + sub_uri
+                    sub_uri = dash_url + '/dash/' + sub_uri
                 timeline = x.find('mpd:SegmentTemplate', ns).find('mpd:SegmentTimeline', ns).find('mpd:S', ns).attrib
                 if not lang_in_langs(lang, av_subs):
                     av_subs.append(lang)
@@ -410,50 +403,62 @@ def main():
                 mappings += ' -map 0:a:' + str(audio_dict[x][0])
                 for j in range(audio_count[x]):
                     audio_metadata += ' -metadata:s:a:' + str(i+a) + ' language=' + get_iso(x, to_iso, iso)
+                    if x in default_audio:
+                        audio_metadata += ' -disposition:a:' + str(i+a) + ' default'
+                        if x == visual_impaired:
+                            audio_metadata += '+visual_impaired'
+                    elif x == visual_impaired:
+                        audio_metadata += ' -disposition:a:' + str(i+a) + ' visual_impaired'
+                    else:
+                        audio_metadata += ' -disposition:a:' + str(i+a) + ' -default'
                     a += 1
                 a -= 1
-                if x in default_audio:
-                    audio_metadata += ' -disposition:a:' + str(i+a) + ' default'
-                    if x == visual_impaired:
-                        audio_metadata += '+visual_impaired'
-                elif x == visual_impaired:
-                    audio_metadata += ' -disposition:a:' + str(i+a) + ' visual_impaired'
         if av_subs:
             sub_list, default_sub = list_tracks(av_subs, wanted_subs, default_sub_list)
-            if ext_subs:
-                dl = {}
-                dl_hi = {}
-                for x in sub_list:
-                    for y in sub_dict[x]:
-                        if y[1]:
-                            if not dl_hi.get(y[2]):
-                                complete_filename = filename + '.' + y[2] + '.HI.srt'
-                                dl_hi[y[2]] = 1
-                            else:
-                                complete_filename = filename + '.' + y[2] + '.HI.(' + str(dl_hi[y[2]]) + ')' + '.srt'
-                                dl_hi[y[2]] += 1
+            dl = {}
+            dl_hi = {}
+            m = 0
+            for x in sub_list:
+                for y in sub_dict[x]:
+                    if y[1]:
+                        if not dl_hi.get(y[2]):
+                            complete_filename = filename + '.' + y[2] + '.HI.srt'
+                            dl_hi[y[2]] = 1
                         else:
-                            if not dl.get(y[2]):
-                                complete_filename = filename + '.' + y[2] + '.srt'
-                                dl[y[2]] = 1
-                            else:
-                                complete_filename = filename + '.' + y[2] + '.(' + str(dl[y[2]]) + ')' + '.srt'
-                                dl[y[2]] += 1
-                        if finnish:
-                            print('Aloitetaan tekstityksen \033[32m' + complete_filename + '\033[39m lataus.\n')
+                            complete_filename = filename + '.' + y[2] + '.HI.(' + str(dl_hi[y[2]]) + ')' + '.srt'
+                            dl_hi[y[2]] += 1
+                    else:
+                        if not dl.get(y[2]):
+                            complete_filename = filename + '.' + y[2] + '.srt'
+                            dl[y[2]] = 1
                         else:
-                            print('Starting downloading subtitle \033[32m' + complete_filename + '\033[39m.\n')
-                        download_sub(complete_filename, y[0][0], y[0][1])
-                        print()
-            else:
-                if finnish:
-                    print('Ainoastaan erilliset tekstitystiedostot ovat tuettuja.')
-                else:
-                    print('Only external subtitles are supported')
-
-        cmd = ( 'ffmpeg ' + dl_settings['ffmpeg options'] + ffmpeg_ua + ' -i \"' + recording_url + '\"' + mappings
-                + ' -c:v ' + dl_settings['ffmpeg video codec'] + ' -c:a ' + dl_settings['ffmpeg audio codec']
-                + audio_metadata + ' \"' + filename + '.' + dl_settings['file extension'] + '\"' )
+                            complete_filename = filename + '.' + y[2] + '.(' + str(dl[y[2]]) + ')' + '.srt'
+                            dl[y[2]] += 1
+                    if finnish:
+                        print('Aloitetaan tekstityksen \033[32m' + complete_filename + '\033[39m lataus.')
+                    else:
+                        print('Starting downloading subtitle \033[32m' + complete_filename + '\033[39m.')
+                    download_sub(complete_filename, y[0][0], y[0][1])
+                    if not ext_subs:
+                        sub_inputs += ' -i \"' + complete_filename + '\"'
+                        mappings += ' -map ' + str(m+1)
+                        sub_metadata += ' -metadata:s:s:' + str(m) + ' language=' + y[2]
+                        del_list.append(complete_filename)
+                        if x in default_sub:
+                            sub_metadata += ' -disposition:s:' + str(m) + ' default'
+                            if y[1] or x == hearing_impaired:
+                                sub_metadata += '+hearing_impaired'
+                        elif y[1] or x == hearing_impaired:
+                            sub_metadata += ' -disposition:s:' + str(m) + ' hearing_impaired'
+                        m += 1
+                    print()
+        if dl_settings['file extension'] == 'mp4':
+            sub_codec = ' -c:s mov_text'
+        else:
+            sub_codec = ' -c:s subrip'
+        cmd = ( 'ffmpeg ' + dl_settings['ffmpeg options'] + ffmpeg_ua + ' -i \"' + recording_url + '\"' + sub_inputs
+                + mappings + ' -c:v ' + dl_settings['ffmpeg video codec'] + ' -c:a ' + dl_settings['ffmpeg audio codec']
+                + sub_codec + audio_metadata + sub_metadata + ' \"' + filename + '.' + dl_settings['file extension'] + '\"' )
 
     # Launch FFmpeg
         if finnish:
@@ -471,22 +476,13 @@ def main():
                 print('Ladattavat ääniraidat: ' + ', '.join([get_iso(x, to_iso, iso) for x in audio_list]))
             else:
                 print('Audio tracks to download: ' + ', '.join([get_iso(x, to_iso, iso) for x in audio_list]))
-        if not ext_subs:
-            if not sub_tracks:
-                if finnish:
-                    print('Ei tekstityksiä')
-                else:
-                    print('No subtitles')
-            else:
-                if finnish:
-                    print('Ladattavat tekstitysraidat: ' + sub_string[:-2])
-                else:
-                    print('Subtitle tracks to download: ' + sub_string[:-2])
         print()
         if args.verbose:
             print(cmd)
             print()
         Popen(cmd, shell=True).wait()
+        for x in del_list:
+            os.remove(x)
 
 if __name__ == "__main__":
     main()
