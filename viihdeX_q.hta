@@ -3652,7 +3652,7 @@ var loadMPC=function(j, download){
 					if ( SETTINGS_external_subtitles )
 						dl_o = ' -e -c dlsettings.ini'
 					else
-						dl_o = ' -c dlsettings.ini'
+						dl_o = ' -m -c dlsettings.ini'
 					if( SETTINGS_downloader == 'viihdexdash_py' )
 						try {
 							w.run('py viihdexdash.py '+l+' "'+h+'"'+dl_o)
