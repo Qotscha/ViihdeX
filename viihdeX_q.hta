@@ -251,8 +251,8 @@ var showLoadingMPC=function(download){
 			$("status").setHTML('Aloitetaan tallenteen lataus FFmpeg:llä<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'streamlink')
 			$("status").setHTML('Aloitetaan tallenteen lataus Streamlinkillä<span id="loading"></span>')
-		else if (SETTINGS_downloader == 'youtube-dl')
-			$("status").setHTML('Aloitetaan tallenteen lataus youtube-dl:llä<span id="loading"></span>')
+		else if (SETTINGS_downloader == 'yt-dlp')
+			$("status").setHTML('Aloitetaan tallenteen lataus yt-dlp:llä<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'vlc')
 			$("status").setHTML('Aloitetaan tallenteen lataus VLC:llä<span id="loading"></span>')
 		else if (SETTINGS_downloader == 'curl')
@@ -3123,8 +3123,8 @@ var showSettings=function(){
 
 			f+='<br><div style="float: right;">'
 			f+="<br><b>Lataaja</b><br>";
-			var downloader_values = [ "viihdexdash", "viihdexdash_py", "curl", "ffmpeg", "streamlink", "youtube-dl", "vlc" ];
-			var downloader_texts =  [ "ViihdeXDASH (.exe)", "ViihdeXDASH (.py)", "curl (.m3u8)", "FFmpeg (EI TEKST.)", "Streamlink (EI TEKST.)", "youtube-dl (EI TEKST.)", "VLC (EI TEKST.)" ];
+			var downloader_values = [ "viihdexdash", "viihdexdash_py", "curl", "ffmpeg", "streamlink", "yt-dlp", "vlc" ];
+			var downloader_texts =  [ "ViihdeXDASH (.exe)", "ViihdeXDASH (.py)", "curl (.mpd)", "FFmpeg (EI TEKST.)", "Streamlink (EI TEKST.)", "yt-dlp (EI TEKST.)", "VLC (EI TEKST.)" ];
 			f+='<select class="select" id="dropdown-downloader-list">'
 			for( i=0; i<downloader_values.length; i++ )
 			{
@@ -3652,7 +3652,7 @@ var loadMPC=function(j, download){
 					if ( SETTINGS_external_subtitles )
 						dl_o = ' -e -c dlsettings.ini'
 					else
-						dl_o = ''
+						dl_o = ' -c dlsettings.ini'
 					if( SETTINGS_downloader == 'viihdexdash_py' )
 						try {
 							w.run('py viihdexdash.py '+l+' "'+h+'"'+dl_o)
@@ -3672,15 +3672,15 @@ var loadMPC=function(j, download){
 					else if ( SETTINGS_downloader == 'ffmpeg' )
 						w.run('ffmpeg -v error -stats -i '+l+' -c copy "'+h+'.mkv"')
 					else if ( SETTINGS_downloader == 'streamlink' )
-						w.run('streamlink -o "'+h+'.ts" "hls://'+l+' name_fmt=\'{pixels}_{bitrate}\'" best')
-					else if ( SETTINGS_downloader == 'youtube-dl' )
-						w.run('youtube-dl --hls-prefer-native -f "bestvideo+bestaudio[language=fi]" -o "'+h+'.mp4" '+l)
+						w.run('streamlink -o "'+h+'.ts" '+l+' best')
+					else if ( SETTINGS_downloader == 'yt-dlp' )
+						w.run('yt-dlp -f "bestvideo+bestaudio[language=fi]" -o "'+h+'.mp4" '+l)
 					else
 						try {
-							w.run('curl -L -C - -o "'+h+'.m3u8" '+l)
+							w.run('curl -L -C - -o "'+h+'.mpd" '+l)
 						}
 						catch(err) {
-							w.run('%windir%\\Sysnative\\curl -L -C - -o "'+h+'.m3u8" '+l)
+							w.run('%windir%\\Sysnative\\curl -L -C - -o "'+h+'.mpd" '+l)
 						}
 					if( SETTINGS_save_description == 1 )
 					{
