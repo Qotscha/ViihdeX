@@ -1,3 +1,8 @@
+v. 1.5.1X1.5.q6.1 (17.11.2026)
+- Mahdollistettu tekstitysten muksaaminen videotiedostoon
+- Korvattu youtube-dl yt-dlp:llä lataajavaihtoehdoissa
+- Korjattu streamlinkin käyttö lataajana
+
 v. 1.5.1X1.5.q6.0 (13.10.2026)
 - Lataukset suoritetaan DASH-protokollaa käyttäen
 
